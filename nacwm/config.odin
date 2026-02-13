@@ -1,0 +1,116 @@
+package nacwm
+
+REFRESH_RATE  :: 165
+MASTER_FACTOR :: 0.6
+
+STYLE :: Style{
+    border = {
+        width = 1,
+        color = {
+            .Normal   = "gray",
+            .Selected = "red",
+        }
+    }
+}
+
+SCREENSHOT :: "/home/nar/.local/bin/screenshot"
+RECORD     :: "/home/nar/.local/bin/record-screen-x11"
+
+RULES := [?]Rule{
+    // class       instance   title                 tags  floating  monitor
+    { "vesktop",   "",        "",                   {1},  false,    1            },
+    { "steam_app", "",        "",                   {},   true,     MONITOR_NONE },
+    { "",          "Toolkit", "Picture-in-Picture", {},   true,     MONITOR_NONE },
+}
+
+BINDINGS := [?]Keybind{
+    { {.Mod4Mask},             .XK_d,      Spawn{"dmenu_run",   nil} },
+    { {.Mod4Mask},             .XK_Return, Spawn{"kitty",       nil} },
+    { {.Mod4Mask},             .XK_l,      Spawn{"nemo",        nil} },
+    { {.Mod4Mask},             .XK_w,      Spawn{"zen-browser", nil} },
+
+    { {},                      .XK_Print,  Spawn{SCREENSHOT,    nil} },
+    { {.ShiftMask},            .XK_Print,  Spawn{RECORD,        nil} },
+
+    { {.Mod4Mask},             .XK_1,      View{1} },
+    { {.Mod4Mask},             .XK_2,      View{2} },
+    { {.Mod4Mask},             .XK_3,      View{3} },
+    { {.Mod4Mask},             .XK_4,      View{4} },
+    { {.Mod4Mask},             .XK_5,      View{5} },
+    { {.Mod4Mask},             .XK_6,      View{6} },
+    { {.Mod4Mask},             .XK_7,      View{7} },
+    { {.Mod4Mask},             .XK_8,      View{8} },
+    { {.Mod4Mask},             .XK_9,      View{9} },
+    { {.Mod4Mask},             .XK_0,      ~View{} },
+
+    { {.Mod4Mask, .ShiftMask}, .XK_1,      ToTag{1} },
+    { {.Mod4Mask, .ShiftMask}, .XK_2,      ToTag{2} },
+    { {.Mod4Mask, .ShiftMask}, .XK_3,      ToTag{3} },
+    { {.Mod4Mask, .ShiftMask}, .XK_4,      ToTag{4} },
+    { {.Mod4Mask, .ShiftMask}, .XK_5,      ToTag{5} },
+    { {.Mod4Mask, .ShiftMask}, .XK_6,      ToTag{6} },
+    { {.Mod4Mask, .ShiftMask}, .XK_7,      ToTag{7} },
+    { {.Mod4Mask, .ShiftMask}, .XK_8,      ToTag{8} },
+    { {.Mod4Mask, .ShiftMask}, .XK_9,      ToTag{9} },
+    { {.Mod4Mask, .ShiftMask}, .XK_0,      ~ToTag{} },
+
+    { {.Mod4Mask, .ShiftMask}, .XK_m,      ToMonitor{1} },
+    { {.Mod4Mask, .ShiftMask}, .XK_h,      ToMonitor{0} },
+
+    { {.Mod4Mask},             .XK_t,      Float{} },
+
+    { {.Mod4Mask},             .XK_q,      Shoot{}     },
+    { {.Mod4Mask, .ShiftMask}, .XK_q,      Shoot{true} },
+
+    { {.Mod4Mask},             .XK_x,      Rebirth{} },
+    { {.Mod4Mask, .ShiftMask}, .XK_x,      Thats{}   },
+}
+
+BUTTON_BINDINGS := [?]Buttonbind{
+    { .Client, {.Mod4Mask}, .Button1, MouseMove{} }
+}
+
+/*
+static const char *audupcmd[]   = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%+",    NULL };
+static const char *auddowncmd[] = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-",    NULL };
+static const char *audmutecmd[] = { "wpctl", "set-mute",   "@DEFAULT_AUDIO_SINK@", "toggle", NULL };
+static const char *audplaycmd[] = { "playerctl", "play-pause", NULL };
+static const char *audnextcmd[] = { "playerctl", "next",       NULL };
+static const char *audprevcmd[] = { "playerctl", "previous",   NULL };
+static const char *monupcmd[]   = { "brightnessctl", "-c", "backlight", "set", "5%+", NULL };
+static const char *mondowncmd[] = { "brightnessctl", "-c", "backlight", "set", "5%-", NULL };
+
+static const Key keys[] = {
+    /* modifier                     key        function        argument */
+    { MODKEY,                       XK_d,      spawn,          {.v = dmenucmd } },
+    { MODKEY,                       XK_n,      focusstack,     {.i = +1 } },
+    { MODKEY,                       XK_e,      focusstack,     {.i = -1 } },
+    { MODKEY|ShiftMask,             XK_n,      zoom,           {0} },
+    { MODKEY|ShiftMask,             XK_e,      zoom,           {0} },
+    { MODKEY|ControlMask,           XK_m,      setmfact,       {.f = -0.05} },
+    { MODKEY|ControlMask,           XK_h,      setmfact,       {.f = +0.05} },
+    { MODKEY,                       XK_m,      focusmon,       {.i = -1 } },
+    { MODKEY,                       XK_h,      focusmon,       {.i = +1 } },
+    { MODKEY,                       XK_x,      quit,           {.i = 1} }, /* Restart */
+    { 0,         XF86XK_AudioRaiseVolume,      spawn,          {.v = audupcmd } },
+    { 0,         XF86XK_AudioLowerVolume,      spawn,          {.v = auddowncmd } },
+    { 0,         XF86XK_AudioMute,             spawn,          {.v = audmutecmd } },
+    { 0,         XF86XK_AudioPlay,             spawn,          {.v = audplaycmd } },
+    { 0,         XF86XK_AudioNext,             spawn,          {.v = audnextcmd } },
+    { 0,         XF86XK_AudioPrev,             spawn,          {.v = audprevcmd } },
+    { 0,         XF86XK_MonBrightnessUp,       spawn,          {.v = monupcmd } },
+    { 0,         XF86XK_MonBrightnessDown,     spawn,          {.v = mondowncmd } },
+*/
+
+/*
+    { ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
+    { ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[2]} },
+    { ClkWinTitle,          0,              Button2,        zoom,           {0} },
+    { ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
+    { ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
+    { ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
+    { ClkTagBar,            0,              Button1,        view,           {0} },
+    { ClkTagBar,            0,              Button3,        toggleview,     {0} },
+    { ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
+    { ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
+*/
