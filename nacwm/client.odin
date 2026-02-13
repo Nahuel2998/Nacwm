@@ -213,7 +213,7 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
 
     client_update_name(&client)
 
-    monitor_idx := g_monitor_idx
+    monitor_idx := MONITOR_NONE
     if transient_for != X.None {
         new_monitor_idx, client_idx := client_from_window(transient_for)
         if client_idx != CLIENT_NONE {
@@ -222,7 +222,7 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
             monitor_idx = new_monitor_idx
         }
     }
-    else {
+    if monitor_idx == MONITOR_NONE {
         monitor_idx = client_apply_rules(&client)
     }
     monitor := g_monitors[monitor_idx]
