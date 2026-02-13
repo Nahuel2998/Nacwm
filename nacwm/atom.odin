@@ -163,14 +163,16 @@ update_client_list :: proc() {
 
 // -- Utils
 get_property :: proc(window : X.Window, prop : X.Atom, x_type : X.Atom, $type : typeid) -> (type, bool) {
-    _a   : X.Atom
-    _i   : c.int
-    _ul  : c.ulong
+    _a : X.Atom
+    _i : c.int
+    _ul, num_items : c.ulong
     data : rawptr
 
-    status := X.GetWindowProperty(g_display, window, prop, 0, size_of(type)/size_of(i32), false, x_type, &_a, &_i, &_ul, &_ul, &data)
+    status := X.GetWindowProperty(g_display, window, prop, 0, size_of(type)/size_of(i32), false, x_type, &_a, &_i, &num_items, &_ul, &data)
     if status != 0 || data == nil do return {}, false
     defer X.Free(data)
+
+    if num_items == 0 do return {}, true
 
     res := cast(^type)data
     return res^, true
