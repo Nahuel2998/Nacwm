@@ -2,6 +2,7 @@ package nacwm
 
 REFRESH_RATE  :: 165
 MASTER_FACTOR :: 0.6
+GAPS_WIDTH    :: 2 * 5
 
 STYLE :: Style{
     border = {
@@ -91,9 +92,6 @@ static const Key keys[] = {
     { MODKEY|ShiftMask,             XK_e,      zoom,           {0} },
     { MODKEY|ControlMask,           XK_m,      setmfact,       {.f = -0.05} },
     { MODKEY|ControlMask,           XK_h,      setmfact,       {.f = +0.05} },
-    { MODKEY,                       XK_m,      focusmon,       {.i = -1 } },
-    { MODKEY,                       XK_h,      focusmon,       {.i = +1 } },
-    { MODKEY,                       XK_x,      quit,           {.i = 1} }, /* Restart */
     { 0,         XF86XK_AudioRaiseVolume,      spawn,          {.v = audupcmd } },
     { 0,         XF86XK_AudioLowerVolume,      spawn,          {.v = auddowncmd } },
     { 0,         XF86XK_AudioMute,             spawn,          {.v = audmutecmd } },

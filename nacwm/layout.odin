@@ -24,21 +24,36 @@ monitor_tile :: proc(monitor : Monitor) {
         if client.floating || !client_is_visible(client_idx, monitor) do continue
 
         if i == 0 {
-            client_resize(&client, monitor.pos, {master_width, monitor.size.y} - 2 * client.border)
-        } else {
-            client_resize(&client, stack_pos, stack_size - 2 * client.border)
+            size := [2]i32{master_width, monitor.size.y} - (2 * client.border)
+            client_resize(
+                &client,
+                monitor.pos + GAPS_WIDTH,
+                size        - {
+                    1.5 * GAPS_WIDTH,
+                    2   * GAPS_WIDTH,
+                },
+            )
+        }
+        else {
+            size := stack_size - (2 * client.border)
+            if i == (num_tiled - 1) do size -= 0.5 * GAPS_WIDTH
+            client_resize(
+                &client,
+                stack_pos + { 0.5 * GAPS_WIDTH, GAPS_WIDTH },
+                size      -   1.5 * GAPS_WIDTH,
+            )
             stack_pos.y += stack_size.y
         }
         i += 1
     }
 }
 
-// TODO: Gaps
 monitor_tile_single :: proc(monitor : Monitor) {
     for &client, client_idx in monitor.clients {
         if client.floating || !client_is_visible(client_idx, monitor) do continue
 
-        client_resize(&client, monitor.pos, monitor.size - 2 * client.border)
+        size := monitor.size - 2 * client.border
+        client_resize(&client, monitor.pos + GAPS_WIDTH, size - 2 * GAPS_WIDTH)
         break
     }
 }
