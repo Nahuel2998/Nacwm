@@ -163,7 +163,8 @@ monitor_show_hide :: proc(monitor : Monitor) {
         if client_is_visible(client_idx, monitor) do continue
         client := monitor.clients[client_idx]
 
-        X.MoveWindow(g_display, client.window, client.size.x * -2, client.size.y)
+        client_size := client_size_real(client)
+        X.MoveWindow(g_display, client.window, client_size.x * -2, client.pos.y)
     }
 }
 

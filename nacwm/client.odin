@@ -296,14 +296,16 @@ client_unmanage :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index, 
 
 // -- Utils
 client_ensure_onscreen :: proc(client : ^Client, monitor : Monitor) {
+    client_size := client_size_real(client^)
+
     // br -> Bottom_Right
-    client_br  :=  client.pos +  client.size
+    client_br  :=  client.pos +  client_size
     monitor_br := monitor.pos + monitor.size
     if client_br.x > monitor_br.x {
-        client.pos.x = monitor_br.x - client.size.x
+        client.pos.x = monitor_br.x - client_size.x
     }
     if client_br.y > monitor_br.y {
-        client.pos.y = monitor_br.y - client.size.y
+        client.pos.y = monitor_br.y - client_size.y
     }
     client.pos.x = max(client.pos.x, monitor.pos.x)
     client.pos.y = max(client.pos.y, monitor.pos.y)

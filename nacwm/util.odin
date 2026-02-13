@@ -37,9 +37,11 @@ apply_size_hints :: proc(client : ^Client, pos : ^[2]i32, size : ^[2]i32) -> boo
     size.x = max(1, size.x)
     size.y = max(1, size.y)
 
+    client_size := client_size_real(client^)
+
     // TODO: Differ between automatic and interact
-    if pos.x > g_screen.size.x do pos.x = g_screen.size.x - client.size.x
-    if pos.y > g_screen.size.y do pos.y = g_screen.size.y - client.size.y
+    if pos.x > g_screen.size.x do pos.x = g_screen.size.x - client_size.x
+    if pos.y > g_screen.size.y do pos.y = g_screen.size.y - client_size.y
     if pos.x + size.x < 0      do pos.x = 0
     if pos.y + size.y < 0      do pos.y = 0
 
@@ -53,4 +55,8 @@ apply_size_hints :: proc(client : ^Client, pos : ^[2]i32, size : ^[2]i32) -> boo
     }
 
     return pos^ != client.pos || size^ != client.size
+}
+
+client_size_real :: #force_inline proc(client : Client) -> [2]i32 {
+    return client.size + 2 * client.border
 }

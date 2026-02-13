@@ -24,9 +24,9 @@ monitor_tile :: proc(monitor : Monitor) {
         if client.floating || !client_is_visible(client_idx, monitor) do continue
 
         if i == 0 {
-            client_resize(&client, monitor.pos, {master_width, monitor.size.y})
+            client_resize(&client, monitor.pos, {master_width, monitor.size.y} - 2 * client.border)
         } else {
-            client_resize(&client, stack_pos, stack_size)
+            client_resize(&client, stack_pos, stack_size - 2 * client.border)
             stack_pos.y += stack_size.y
         }
         i += 1
@@ -38,7 +38,7 @@ monitor_tile_single :: proc(monitor : Monitor) {
     for &client, client_idx in monitor.clients {
         if client.floating || !client_is_visible(client_idx, monitor) do continue
 
-        client_resize(&client, monitor.pos, monitor.size)
+        client_resize(&client, monitor.pos, monitor.size - 2 * client.border)
         break
     }
 }
