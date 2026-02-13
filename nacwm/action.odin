@@ -93,7 +93,7 @@ do_action :: proc(action : Action) {
         if a.target >= len(g_monitors) do return
 
         client_idx := g_monitors[g_monitor_idx].selected
-        client_switch_monitor(client_idx, g_monitor_idx, a.target)
+        client_switch_monitor(client_idx, g_monitor_idx, a.target, move=true)
 
     case Float:
         client_idx := g_monitors[g_monitor_idx].selected

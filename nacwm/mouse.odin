@@ -57,6 +57,6 @@ client_mouse_move :: proc() {
     if monitor_idx != g_monitor_idx {
         old_monitor_idx := g_monitor_idx
         g_monitor_idx    = monitor_idx
-        client_switch_monitor(client_idx, old_monitor_idx, monitor_idx)
+        client_switch_monitor(client_idx, old_monitor_idx, monitor_idx, move=false)
     }
 }

@@ -150,7 +150,7 @@ client_kill :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index, kind
     X.UngrabServer(g_display)
 }
 
-client_switch_monitor :: proc(client_idx : Client_Index, old_monitor_idx, new_monitor_idx : Monitor_Index) {
+client_switch_monitor :: proc(client_idx : Client_Index, old_monitor_idx, new_monitor_idx : Monitor_Index, $move : bool) {
     if client_idx      == CLIENT_NONE \
     || old_monitor_idx == new_monitor_idx { return }
 
@@ -166,6 +166,14 @@ client_switch_monitor :: proc(client_idx : Client_Index, old_monitor_idx, new_mo
 
     new_client_idx := client_attach(new_monitor_idx, client)
     client_stack_attach(new_monitor_idx, new_client_idx)
+
+    when move {
+        new_client := &g_monitors[new_monitor_idx].clients[new_client_idx]
+        if new_client.floating {
+            offset := new_monitor.pos - old_monitor.pos
+            client_resize(new_client, new_client.pos + offset, new_client.size)
+        }
+    }
 
     // TODO: Consider whether focus should follow client moved
     client_focus(CLIENT_NONE)
