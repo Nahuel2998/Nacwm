@@ -8,7 +8,7 @@ STYLE :: Style{
     border = {
         width = 1,
         color = {
-            .Normal   = "gray",
+            .Normal   = "dim gray",
             .Selected = "red",
         }
     }
