@@ -14,18 +14,20 @@ Action :: union {
     View,
     Shoot,
     // Select,
+    SelectMonitor,
     ToTag,
     ToMonitor,
     Float,
     MouseMove,
 }
 
-Rebirth   :: distinct struct{ }
-Thats     :: distinct struct{ }
-Spawn     :: distinct []cstring
-View      :: distinct Tags
-Shoot     :: distinct struct{ unkindly : bool }
-// Select :: distinct struct{ delta : i8 }
+Rebirth :: distinct struct{ }
+Thats   :: distinct struct{ }
+Spawn :: distinct []cstring
+View  :: distinct Tags
+Shoot :: distinct struct{ unkindly : bool }
+// Select        :: distinct struct{ delta : i8 }
+SelectMonitor :: distinct struct{ target : Monitor_Index }
 ToTag     :: distinct Tags
 ToMonitor :: distinct struct{ target : Monitor_Index }
 Float     :: distinct struct{ }
@@ -39,6 +41,8 @@ verify_bindings :: proc() {
             if a[len(a) - 1] != nil do log.panic("Spawn{", a, "} doesn't end with `nil`. It should.")
 
         case ToMonitor:
+            if a.target < 0 do log.panic(a, "can't be negative. Target must be a Monitor_Index")
+        case SelectMonitor:
             if a.target < 0 do log.panic(a, "can't be negative. Target must be a Monitor_Index")
         }
     }
@@ -80,6 +84,13 @@ do_action :: proc(action : Action) {
     case Shoot:
         client_idx := g_monitors[g_monitor_idx].selected
         client_kill(g_monitor_idx, client_idx, !a.unkindly)
+
+    case SelectMonitor:
+        if g_monitor_idx == a.target do return
+
+        client_unfocus(false)
+        g_monitor_idx = a.target
+        client_focus(CLIENT_NONE)
 
     case ToTag:
         client_idx := g_monitors[g_monitor_idx].selected
