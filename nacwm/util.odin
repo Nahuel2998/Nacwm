@@ -50,6 +50,8 @@ apply_size_hints :: proc(client : ^Client, pos : ^[2]i32, size : ^[2]i32) -> boo
 
         // TODO: Base/increment calculations
 
+        if client.hints.min.x != 0 do size.x = max(size.x, client.hints.min.x)
+        if client.hints.min.y != 0 do size.y = max(size.y, client.hints.min.y)
         if client.hints.max.x != 0 do size.x = min(size.x, client.hints.max.x)
         if client.hints.max.y != 0 do size.y = min(size.y, client.hints.max.y)
     }

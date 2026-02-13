@@ -70,7 +70,8 @@ BINDINGS := [?]Keybind{
 }
 
 BUTTON_BINDINGS := [?]Buttonbind{
-    { .Client, {.Mod4Mask}, .Button1, MouseMove{} }
+    { .Client, {.Mod4Mask}, .Button1, MouseMove{}   },
+    { .Client, {.Mod4Mask}, .Button3, MouseResize{} },
 }
 
 /*
@@ -108,7 +109,6 @@ static const Key keys[] = {
     { ClkWinTitle,          0,              Button2,        zoom,           {0} },
     { ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
     { ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
-    { ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
     { ClkTagBar,            0,              Button1,        view,           {0} },
     { ClkTagBar,            0,              Button3,        toggleview,     {0} },
     { ClkTagBar,            MODKEY,         Button1,        tag,            {0} },

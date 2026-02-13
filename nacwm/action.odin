@@ -19,6 +19,7 @@ Action :: union {
     ToMonitor,
     Float,
     MouseMove,
+    MouseResize,
 }
 
 Rebirth :: distinct struct{ }
@@ -31,7 +32,8 @@ SelectMonitor :: distinct struct{ target : Monitor_Index }
 ToTag     :: distinct Tags
 ToMonitor :: distinct struct{ target : Monitor_Index }
 Float     :: distinct struct{ }
-MouseMove :: distinct struct{ }
+MouseMove   :: distinct struct{ }
+MouseResize :: distinct struct{ }
 
 // Checks whether there's something wrong in the bindings config
 verify_bindings :: proc() {
@@ -111,6 +113,9 @@ do_action :: proc(action : Action) {
         client_float(g_monitor_idx, client_idx)
 
     case MouseMove:
-        client_mouse_move()
+        client_mouse_action(.Move)
+
+    case MouseResize:
+        client_mouse_action(.Resize)
     }
 }
