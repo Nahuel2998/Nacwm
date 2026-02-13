@@ -50,8 +50,8 @@ window_take_focus :: proc(window : X.Window, focus : bool) {
     window := window
     if focus {
         X.SetInputFocus( g_display, window, .RevertToPointerRoot, X.CurrentTime )
-        X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.Active_Window], XA_WINDOW, 32, X.PropModeReplace, &window, 1)
     }
+    X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.Active_Window], XA_WINDOW, 32, X.PropModeReplace, &window, 1)
     send_message(window, .Take_Focus)
 }
 
