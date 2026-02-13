@@ -20,6 +20,7 @@ Action :: union {
     Float,
     MouseMove,
     MouseResize,
+    MasterResize,
 }
 
 Rebirth :: distinct struct{ }
@@ -34,6 +35,7 @@ ToMonitor :: distinct struct{ target : Monitor_Index }
 Float     :: distinct struct{ }
 MouseMove   :: distinct struct{ }
 MouseResize :: distinct struct{ }
+MasterResize :: distinct struct{ delta : f32 }
 
 // Checks whether there's something wrong in the bindings config
 verify_bindings :: proc() {
@@ -46,6 +48,9 @@ verify_bindings :: proc() {
             if a.target < 0 do log.panic(a, "can't be negative. Target must be a Monitor_Index")
         case SelectMonitor:
             if a.target < 0 do log.panic(a, "can't be negative. Target must be a Monitor_Index")
+
+        case MasterResize:
+            if a.delta < -1 || a.delta > 1 do log.panic(a, "must be a float in range -1..1")
         }
     }
 }
@@ -117,5 +122,13 @@ do_action :: proc(action : Action) {
 
     case MouseResize:
         client_mouse_action(.Resize)
+
+    case MasterResize:
+        monitor    := &g_monitors[g_monitor_idx]
+        new_factor := monitor.master_factor + a.delta
+        if new_factor < 0.05 || new_factor > 0.95 do return
+
+        monitor.master_factor = new_factor
+        monitor_tile(monitor^)
     }
 }

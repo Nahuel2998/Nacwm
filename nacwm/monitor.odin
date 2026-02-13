@@ -18,7 +18,7 @@ Monitor :: struct {
 
     master_factor : f32,
 
-    tags     : Tags,
+    tags : Tags,
 }
 g_monitors : [dynamic]Monitor
 
