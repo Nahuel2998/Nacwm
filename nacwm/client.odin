@@ -128,6 +128,7 @@ client_float :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
     client.floating = !client.floating // TODO: Fixed windows also float
     if client.floating {
         client_resize(client, client.pos, client.size)
+        X.RaiseWindow(g_display, client.window)
     }
     monitor_arrange(monitor_idx)
 }
