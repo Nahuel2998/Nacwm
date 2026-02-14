@@ -99,7 +99,7 @@ client_update_wmhints :: proc(client : ^Client) {
 }
 
 client_update_sizehints :: proc(client : ^Client) {
-    _sh : X.SizeHints
+    _sh   : X.SizeHints
     hints : X.XSizeHints
     ok := bool(X.GetWMNormalHints(g_display, client.window, &hints, &_sh))
     if !ok do hints.flags = {}
@@ -110,11 +110,9 @@ client_update_sizehints :: proc(client : ^Client) {
     if       .PMinSize in hints.flags do client.hints.min = { hints.min_width,  hints.min_height  }
     else if .PBaseSize in hints.flags do client.hints.min = { hints.base_width, hints.base_height }
 
-    if       .PMaxSize in hints.flags do client.hints.max = { hints.max_width, hints.max_height }
+    if       .PMaxSize in hints.flags do client.hints.max = { hints.max_width,  hints.max_height  }
 
     // TODO: Handle aspect
-
-    // TODO: Fixed windows
     client.hints.valid = true
 }
 

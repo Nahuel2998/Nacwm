@@ -60,3 +60,8 @@ apply_size_hints :: proc(client : ^Client, pos : ^[2]i32, size : ^[2]i32) -> boo
 client_size_real :: #force_inline proc(client : Client) -> [2]i32 {
     return client.size + 2 * client.border
 }
+
+client_is_fixed :: #force_inline proc(client : Client) -> bool {
+    return client.hints.min != {0, 0} \
+        && client.hints.min == client.hints.max
+}

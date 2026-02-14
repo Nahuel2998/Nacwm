@@ -124,7 +124,9 @@ client_float :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
     // TODO: What to do with fullscreen windows?
 
     client := &g_monitors[monitor_idx].clients[client_idx]
-    client.floating = !client.floating // TODO: Fixed windows also float
+    if client_is_fixed(client^) do return
+
+    client.floating = !client.floating
     if client.floating {
         client_resize(client, client.pos, client.size)
         X.RaiseWindow(g_display, client.window)
@@ -241,8 +243,7 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
     grab_buttons(window, false)
 
     if !client.floating {
-        // TODO: Windows that can't be resized (fixed) should float too
-        client.floating = transient_for != X.None
+        client.floating = transient_for != X.None || client_is_fixed(client)
     }
     client_update_type(&client)
     if client.floating {
