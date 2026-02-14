@@ -1,7 +1,5 @@
 package nacwm
 
-import X "vendor:x11/xlib"
-
 monitor_tile :: proc(monitor : Monitor) {
     num_tiled : i32
     for client, client_idx in monitor.clients {

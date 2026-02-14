@@ -114,7 +114,7 @@ monitor_pop :: proc() -> (changed : bool) {
 
     if len(monitor.clients) > 0 do changed = true
 
-    for client, idx in monitor.clients {
+    for client in monitor.clients {
         client_idx := client_attach(0, client)
         client_stack_attach(0, client_idx)
     }
@@ -186,7 +186,6 @@ monitor_idx_from_rect :: proc(pos : [2]i32, size : [2]i32, default := g_monitor_
     area : i32
     res  := default
     for monitor, i in g_monitors {
-        mon_sum  := monitor.pos + monitor.size
         new_area := max(0, min(pos.x + size.x, monitor.pos.x + monitor.size.x) - max(pos.x, monitor.pos.x)) \
                   * max(0, min(pos.y + size.y, monitor.pos.y + monitor.size.y) - max(pos.y, monitor.pos.y))
         if new_area > area {

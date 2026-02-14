@@ -25,8 +25,8 @@ scan_windows :: proc() {
 
     attrs : X.XWindowAttributes
     for window in windows[:num_windows] {
-        ok := bool(X.GetWindowAttributes(g_display, window, &attrs))
-        if !ok || attrs.override_redirect do continue
+        ok_attrs := bool(X.GetWindowAttributes(g_display, window, &attrs))
+        if !ok_attrs || attrs.override_redirect do continue
 
         transient := bool(X.GetTransientForHint(g_display, window, &transients[num_trans].trans_for))
 

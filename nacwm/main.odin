@@ -6,7 +6,6 @@ import "core:log"
 import "core:strings"
 import "core:sys/posix"
 import X "vendor:x11/xlib"
-import "../x11/xinerama"
 
 g_display : ^X.Display
 

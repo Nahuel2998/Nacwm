@@ -1,6 +1,5 @@
 package nacwm
 
-import "core:log"
 import X "vendor:x11/xlib"
 
 CLIENT_NONE :: Client_Index(-1)
@@ -266,7 +265,6 @@ client_unmanage :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index, 
 
     monitor := &g_monitors[monitor_idx]
     client  := monitor.clients[client_idx]
-    window  := client.window
 
     delete(client.name)
     client_stack_detach(monitor, client_idx)
@@ -275,13 +273,13 @@ client_unmanage :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index, 
     when !destroyed {
         X.GrabServer(g_display)
         X.SetErrorHandler(xerror_idc)
-        X.SelectInput(g_display, window, {})
+        X.SelectInput(g_display, client.window, {})
 
         wc := X.XWindowChanges{ border_width = client.original.border }
         X.ConfigureWindow(g_display, client.window, {.CWBorderWidth}, &wc)
 
-        X.UngrabButton(g_display, X.AnyButton, {.AnyModifier}, window)
-        window_state_set(window, .WithdrawnState)
+        X.UngrabButton(g_display, X.AnyButton, {.AnyModifier}, client.window)
+        window_state_set(client.window, .WithdrawnState)
         X.Sync(g_display, false)
 
         X.SetErrorHandler(xerror)

@@ -4,9 +4,6 @@ import "core:sys/posix"
 import "core:log"
 import X "vendor:x11/xlib"
 
-PREV :: -1
-NEXT :: +1
-
 Action :: union {
     Rebirth,
     Thats,
