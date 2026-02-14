@@ -13,7 +13,7 @@ Action :: union {
     Spawn,
     View,
     Shoot,
-    // Select,
+    Select,
     SelectMonitor,
     ToTag,
     ToMonitor,
@@ -28,7 +28,7 @@ Thats   :: distinct struct{ }
 Spawn :: distinct []cstring
 View  :: distinct Tags
 Shoot :: distinct struct{ unkindly : bool }
-// Select        :: distinct struct{ delta : i8 }
+Select        :: distinct struct{ delta : i8 }
 SelectMonitor :: distinct struct{ target : Monitor_Index }
 ToTag     :: distinct Tags
 ToMonitor :: distinct struct{ target : Monitor_Index }
@@ -42,7 +42,7 @@ verify_bindings :: proc() {
     for binding in BINDINGS {
         #partial switch a in binding.action {
         case Spawn:
-            if a[len(a) - 1] != nil do log.panic("Spawn{", a, "} doesn't end with `nil`. It should.")
+            if a[len(a) - 1] != nil do log.panic("Spawn{", a, "} doesn't end with `nil`. It should")
 
         case ToMonitor:
             if a.target < 0 do log.panic(a, "can't be negative. Target must be a Monitor_Index")
@@ -51,6 +51,9 @@ verify_bindings :: proc() {
 
         case MasterResize:
             if a.delta < -1 || a.delta > 1 do log.panic(a, "must be a float in range -1..1")
+
+        case Select:
+            if a.delta == 0 do log.panic(a, "must be anything but 0")
         }
     }
 }
@@ -91,6 +94,23 @@ do_action :: proc(action : Action) {
     case Shoot:
         client_idx := g_monitors[g_monitor_idx].selected
         client_kill(g_monitor_idx, client_idx, !a.unkindly)
+
+    case Select:
+        monitor    := g_monitors[g_monitor_idx]
+        client_idx := monitor.selected
+        if client_idx == CLIENT_NONE do return
+
+        incr  := int(0 < a.delta) - int(a.delta < 0)
+        until := abs(a.delta)
+        for {
+            client_idx += incr
+            client_idx %= len(monitor.clients)
+            if client_idx < 0 do client_idx += len(monitor.clients)
+
+            if client_is_visible(client_idx, monitor) do until -= 1
+            if until == 0 do break
+        }
+        client_focus(client_idx)
 
     case SelectMonitor:
         if g_monitor_idx == a.target do return

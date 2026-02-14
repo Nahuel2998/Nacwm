@@ -55,6 +55,9 @@ BINDINGS := [?]Keybind{
     { {.Mod4Mask, .ShiftMask},   .XK_9,      ToTag{9} },
     { {.Mod4Mask, .ShiftMask},   .XK_0,      ~ToTag{} },
 
+    { {.Mod4Mask},               .XK_n,      Select{-1} },
+    { {.Mod4Mask},               .XK_e,      Select{+1} },
+
     { {.Mod4Mask},               .XK_m,      SelectMonitor{1} },
     { {.Mod4Mask},               .XK_h,      SelectMonitor{0} },
     { {.Mod4Mask, .ShiftMask},   .XK_m,      ToMonitor{1} },
