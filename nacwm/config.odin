@@ -1,5 +1,7 @@
 package nacwm
 
+import X "vendor:x11/xlib"
+
 REFRESH_RATE  :: 165
 MASTER_FACTOR :: 0.6
 GAPS_WIDTH    :: 2 * 5
@@ -29,6 +31,15 @@ BINDINGS := [?]Keybind{
     { {.Mod4Mask},               .XK_Return, Spawn{"kitty",       nil} },
     { {.Mod4Mask},               .XK_l,      Spawn{"nemo",        nil} },
     { {.Mod4Mask},               .XK_w,      Spawn{"zen-browser", nil} },
+
+    { {},  X.KeySym(XF86.AudioRaiseVolume),  Spawn{"wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%+",    nil} },
+    { {},  X.KeySym(XF86.AudioLowerVolume),  Spawn{"wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-",    nil} },
+    { {},  X.KeySym(XF86.AudioMute),         Spawn{"wpctl", "set-mute",   "@DEFAULT_AUDIO_SINK@", "toggle", nil} },
+    { {},  X.KeySym(XF86.AudioPlay),         Spawn{"playerctl", "play-pause", nil} },
+    { {},  X.KeySym(XF86.AudioNext),         Spawn{"playerctl", "next",       nil} },
+    { {},  X.KeySym(XF86.AudioPrev),         Spawn{"playerctl", "previous",   nil} },
+    { {},  X.KeySym(XF86.MonBrightnessUp),   Spawn{"brightnessctl", "-c", "backlight", "set", "5%+", nil} },
+    { {},  X.KeySym(XF86.MonBrightnessDown), Spawn{"brightnessctl", "-c", "backlight", "set", "5%-", nil} },
 
     { {},                        .XK_Print,  Spawn{SCREENSHOT,    nil} },
     { {.ShiftMask},              .XK_Print,  Spawn{RECORD,        nil} },
@@ -81,38 +92,13 @@ BUTTON_BINDINGS := [?]Buttonbind{
 }
 
 /*
-static const char *audupcmd[]   = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%+",    NULL };
-static const char *auddowncmd[] = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-",    NULL };
-static const char *audmutecmd[] = { "wpctl", "set-mute",   "@DEFAULT_AUDIO_SINK@", "toggle", NULL };
-static const char *audplaycmd[] = { "playerctl", "play-pause", NULL };
-static const char *audnextcmd[] = { "playerctl", "next",       NULL };
-static const char *audprevcmd[] = { "playerctl", "previous",   NULL };
-static const char *monupcmd[]   = { "brightnessctl", "-c", "backlight", "set", "5%+", NULL };
-static const char *mondowncmd[] = { "brightnessctl", "-c", "backlight", "set", "5%-", NULL };
-
 static const Key keys[] = {
     /* modifier                     key        function        argument */
-    { MODKEY,                       XK_d,      spawn,          {.v = dmenucmd } },
-    { MODKEY,                       XK_n,      focusstack,     {.i = +1 } },
-    { MODKEY,                       XK_e,      focusstack,     {.i = -1 } },
     { MODKEY|ShiftMask,             XK_n,      zoom,           {0} },
     { MODKEY|ShiftMask,             XK_e,      zoom,           {0} },
-    { 0,         XF86XK_AudioRaiseVolume,      spawn,          {.v = audupcmd } },
-    { 0,         XF86XK_AudioLowerVolume,      spawn,          {.v = auddowncmd } },
-    { 0,         XF86XK_AudioMute,             spawn,          {.v = audmutecmd } },
-    { 0,         XF86XK_AudioPlay,             spawn,          {.v = audplaycmd } },
-    { 0,         XF86XK_AudioNext,             spawn,          {.v = audnextcmd } },
-    { 0,         XF86XK_AudioPrev,             spawn,          {.v = audprevcmd } },
-    { 0,         XF86XK_MonBrightnessUp,       spawn,          {.v = monupcmd } },
-    { 0,         XF86XK_MonBrightnessDown,     spawn,          {.v = mondowncmd } },
 */
 
 /*
-    { ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
-    { ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[2]} },
-    { ClkWinTitle,          0,              Button2,        zoom,           {0} },
-    { ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
-    { ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
     { ClkTagBar,            0,              Button1,        view,           {0} },
     { ClkTagBar,            0,              Button3,        toggleview,     {0} },
     { ClkTagBar,            MODKEY,         Button1,        tag,            {0} },

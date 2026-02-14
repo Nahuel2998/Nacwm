@@ -2,6 +2,18 @@ package nacwm
 
 import X "vendor:x11/xlib"
 
+XF86 :: enum uint {
+    AudioLowerVolume  = 0x1008ff11,
+    AudioMute         = 0x1008ff12,
+    AudioRaiseVolume  = 0x1008ff13,
+    AudioPlay         = 0x1008ff14,
+    AudioStop         = 0x1008ff15,
+    AudioPrev         = 0x1008ff16,
+    AudioNext         = 0x1008ff17,
+    MonBrightnessUp   = 0x1008ff02,
+    MonBrightnessDown = 0x1008ff03,
+}
+
 Keybind :: struct {
     modifiers : X.InputMask,
     key       : X.KeySym,
