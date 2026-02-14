@@ -55,6 +55,11 @@ run :: proc() {
     event : X.XEvent
     for g_running {
         X.NextEvent(g_display, &event)
+        if cast(i32)event.type >= len(g_handlers) {
+            // Cairo seems to cause event 65
+            log.info("Received event outside valid range:", cast(i32)event.type)
+            continue
+        }
 
         handler := g_handlers[event.type]
         if handler != nil do handler(event)
@@ -72,6 +77,10 @@ setup :: proc() {
 
     setup_cursors()
     setup_colors()
+
+    setup_bar_font()
+    setup_bars()
+    bar_status_update()
 
     setup_events()
     setup_keys()
@@ -92,6 +101,7 @@ setdown :: proc() {
 
     setdown_cursors()
     setdown_colors()
+    setdown_bar_font()
 
     X.Sync(g_display, false)
     focus_reset()

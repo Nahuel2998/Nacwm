@@ -1,5 +1,6 @@
 package nacwm
 
+import "core:log"
 import X "vendor:x11/xlib"
 
 g_handlers := #partial [X.EventType]proc(X.XEvent) {
@@ -141,8 +142,8 @@ recv_configure_notify :: proc(event : X.XEvent) {
     g_screen.size = { event.width, event.height }
     if !(setup_monitors() || changed) do return
 
-    // TODO: update bar
-    // TODO: fixup fullscreen'd monitors
+    setup_bars()
+    // TODO: fixup fullscreen'd monitors, reposition bars
 
     client_focus(CLIENT_NONE)
     monitor_arrange_all()
@@ -171,7 +172,14 @@ recv_enter_notify :: proc(event : X.XEvent) {
 }
 
 recv_expose :: proc(event : X.XEvent) {
-    // TODO: bar stuff; just use a compositor
+    event := event.xexpose
+    if event.count != 0 do return
+
+    monitor_idx := monitor_idx_from_window(event.window, default=MONITOR_NONE)
+    if monitor_idx == MONITOR_NONE do return
+
+    log.debug("Drawing bar for monitor", monitor_idx)
+    bar_draw(g_monitors[monitor_idx])
 }
 
 recv_focus_in :: proc(event : X.XEvent) {
@@ -231,7 +239,7 @@ recv_property_notify :: proc(event : X.XEvent) {
     event := event.xproperty
 
     if event.window == g_screen.root && event.atom == X.XA_WM_NAME {
-        // TODO: updatestatus
+        bar_status_update()
         return
     }
     if event.state == .PropertyDelete do return

@@ -62,7 +62,9 @@ monitor_idx_from_window :: proc(window : X.Window, default := g_monitor_idx) -> 
         if ok do return monitor_idx_from_rect(pos, {1, 1}, default)
     }
 
-    // TODO: Check for bar
+    for monitor, monitor_idx in g_monitors {
+        if monitor.bar.window == window do return monitor_idx
+    }
 
     monitor_idx, client_idx := client_from_window(window)
     if client_idx != CLIENT_NONE do return monitor_idx

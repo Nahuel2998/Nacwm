@@ -1,6 +1,7 @@
 package nacwm
 
 import "core:c"
+import "core:c/libc"
 import "core:strings"
 import X "vendor:x11/xlib"
 
@@ -178,6 +179,7 @@ get_property :: proc(window : X.Window, prop : X.Atom, x_type : X.Atom, $type : 
     return res^, true
 }
 
+// TODO: Do I really need more than a fixed buffer size?
 get_text_property :: proc(window : X.Window, atom : X.Atom) -> (string, bool) {
     prop : X.XTextProperty
     ok := bool(X.GetTextProperty(g_display, window, &prop, atom))
@@ -198,6 +200,30 @@ get_text_property :: proc(window : X.Window, atom : X.Atom) -> (string, bool) {
         }
     }
     return "", false
+}
+
+get_text_property_buf :: proc(window : X.Window, atom : X.Atom, buf : []u8) -> bool {
+    prop : X.XTextProperty
+    ok := bool(X.GetTextProperty(g_display, window, &prop, atom))
+    if !ok || prop.nitems == 0 do return false
+    defer X.Free(prop.value)
+
+    if prop.encoding == XA_STRING {
+        libc.strncpy(raw_data(buf), cstring(prop.value), len(buf) - 1)
+        return true
+    }
+
+    list : [^]cstring
+    num_elems : i32
+    if XmbTextPropertyToTextList(g_display, &prop, &list, &num_elems) >= cast(i32)X.Status.Success \
+    && num_elems > 0 {
+        defer XFreeStringList(list)
+        if list[0] != nil {
+            libc.strncpy(raw_data(buf), cstring(list[0]), len(buf) - 1)
+            return true
+        }
+    }
+    return false
 }
 
 // -- Bindings

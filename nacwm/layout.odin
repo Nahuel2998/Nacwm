@@ -13,18 +13,21 @@ monitor_tile :: proc(monitor : Monitor) {
         return
     }
 
+    monitor_pos  := [2]i32{ monitor.pos.x,  monitor.pos.y  + STYLE.bar.height }
+    monitor_size := [2]i32{ monitor.size.x, monitor.size.y - STYLE.bar.height }
+
     i : i32
-    master_width := i32(f32(monitor.size.x) * monitor.master_factor)
-    stack_size   := [2]i32{ monitor.size.x  - master_width, monitor.size.y / (num_tiled - 1) }
-    stack_pos    := [2]i32{ monitor.pos.x   + master_width, monitor.pos.y }
+    master_width := i32(f32(monitor_size.x) * monitor.master_factor)
+    stack_size   := [2]i32{ monitor_size.x  - master_width, monitor_size.y / (num_tiled - 1) }
+    stack_pos    := [2]i32{ monitor_pos.x   + master_width, monitor_pos.y }
     #reverse for &client, client_idx in monitor.clients {
         if client.floating || !client_is_visible(client_idx, monitor) do continue
 
         if i == 0 {
-            size := [2]i32{master_width, monitor.size.y} - (2 * client.border)
+            size := [2]i32{master_width, monitor_size.y} - (2 * client.border)
             client_resize(
                 &client,
-                monitor.pos + GAPS_WIDTH,
+                monitor_pos + GAPS_WIDTH,
                 size        - {
                     1.5 * GAPS_WIDTH,
                     2   * GAPS_WIDTH,
@@ -46,11 +49,13 @@ monitor_tile :: proc(monitor : Monitor) {
 }
 
 monitor_tile_single :: proc(monitor : Monitor) {
+    monitor_pos  := [2]i32{ monitor.pos.x,  monitor.pos.y  + STYLE.bar.height }
+    monitor_size := [2]i32{ monitor.size.x, monitor.size.y - STYLE.bar.height }
     for &client, client_idx in monitor.clients {
         if client.floating || !client_is_visible(client_idx, monitor) do continue
 
-        size := monitor.size - 2 * client.border
-        client_resize(&client, monitor.pos + GAPS_WIDTH, size - 2 * GAPS_WIDTH)
+        size := monitor_size - 2 * client.border
+        client_resize(&client, monitor_pos + GAPS_WIDTH, size - 2 * GAPS_WIDTH)
         break
     }
 }

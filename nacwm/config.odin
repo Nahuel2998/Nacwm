@@ -3,8 +3,11 @@ package nacwm
 import X "vendor:x11/xlib"
 
 REFRESH_RATE  :: 165
+
 MASTER_FACTOR :: 0.6
 GAPS_WIDTH    :: 2 * 5
+
+BAR_STATUS_FALLBACK :: "Now | Today"
 
 STYLE :: Style{
     border = {
@@ -13,7 +16,18 @@ STYLE :: Style{
             .Normal   = "dim gray",
             .Selected = "red",
         }
-    }
+    },
+    bar = {
+        height = 24,
+        font   = "Cousine 10",
+        tags   = {
+            .Active = { 0.50, 0.60, 0.80 },
+            .Used   = { 0.37, 0.37, 0.50 },
+            .Unused = { 0.25, 0.25, 0.30 },
+        },
+        status = { 0.80, 0.80, 0.90 },
+        base   = { 0.15, 0.15, 0.20 },
+    },
 }
 
 SCREENSHOT :: "/home/nar/.local/bin/screenshot"

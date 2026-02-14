@@ -1,7 +1,7 @@
 package nacwm
 
 import X "vendor:x11/xlib"
-import "../x11/xinerama"
+import "../vendor/x11/xinerama"
 
 is_geom_unique :: proc(seen : []xinerama.ScreenInfo, geom : xinerama.ScreenInfo) -> bool {
     for other in seen {

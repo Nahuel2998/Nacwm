@@ -84,9 +84,11 @@ do_action :: proc(action : Action) {
         log.panic("Failed to run command:", a)
 
     case View:
-        g_monitors[g_monitor_idx].tags = cast(Tags)a
+        monitor := &g_monitors[g_monitor_idx]
+        monitor.tags = cast(Tags)a
         client_focus(CLIENT_NONE)
         monitor_arrange(g_monitor_idx)
+        bar_draw(monitor^)
 
     case Shoot:
         client_idx := g_monitors[g_monitor_idx].selected
@@ -117,12 +119,14 @@ do_action :: proc(action : Action) {
         client_focus(CLIENT_NONE)
 
     case ToTag:
-        client_idx := g_monitors[g_monitor_idx].selected
+        monitor := &g_monitors[g_monitor_idx]
+        client_idx := monitor.selected
         if client_idx == CLIENT_NONE do return
 
-        g_monitors[g_monitor_idx].clients[client_idx].tags = cast(Tags)a
+        monitor.clients[client_idx].tags = cast(Tags)a
         client_focus(CLIENT_NONE)
         monitor_arrange(g_monitor_idx)
+        bar_draw(monitor^)
 
     case ToMonitor:
         if a.target >= len(g_monitors) do return

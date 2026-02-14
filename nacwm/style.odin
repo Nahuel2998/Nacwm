@@ -19,11 +19,24 @@ Color_Scheme_Type :: enum {
 }
 g_scheme : [Color_Scheme_Type]Color_Scheme
 
+Cairo_Color :: [3]f64
+Tag_Status :: enum {
+    Active,
+    Used,
+    Unused,
+}
 Style :: struct {
     border : struct {
         width : i32,
         color : [Color_Scheme_Type]cstring,
-    }
+    },
+    bar : struct {
+        height : i32,
+        font   : cstring,
+        tags   : [Tag_Status]Cairo_Color,
+        status : Cairo_Color,
+        base   : Cairo_Color,
+    },
 }
 
 setup_cursors :: proc() {

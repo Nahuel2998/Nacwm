@@ -1,7 +1,7 @@
 package nacwm
 
 import X "vendor:x11/xlib"
-import "../x11/xinerama"
+import "../vendor/x11/xinerama"
 
 Tags :: bit_set[1..=9]
 
@@ -17,8 +17,9 @@ Monitor :: struct {
     stack    : [dynamic]Client_Index,
 
     master_factor : f32,
-
     tags : Tags,
+
+    bar : Bar,
 }
 g_monitors : [dynamic]Monitor
 
@@ -104,6 +105,9 @@ monitor_new :: proc() {
 
 // Free stuff allocated by monitor
 monitor_delete :: proc(monitor : Monitor) {
+    if monitor.bar.window != X.None {
+        bar_delete(monitor.bar)
+    }
     delete(monitor.clients)
 }
 
