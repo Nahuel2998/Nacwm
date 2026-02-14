@@ -18,8 +18,8 @@ STYLE :: Style{
         }
     },
     bar = {
-        height = 24,
-        font   = "Cousine 10",
+        height = 22,
+        font   = "Cousine 9",
         tags   = {
             .Active = { 0.50, 0.60, 0.80 },
             .Used   = { 0.37, 0.37, 0.50 },
@@ -32,6 +32,7 @@ STYLE :: Style{
 
 SCREENSHOT :: "/home/nar/.local/bin/screenshot"
 RECORD     :: "/home/nar/.local/bin/record-screen-x11"
+DMENU_FONT :: "monospace:size=10"
 
 RULES := [?]Rule{
     // class       instance   title                 tags  floating  monitor
@@ -41,10 +42,10 @@ RULES := [?]Rule{
 }
 
 BINDINGS := [?]Keybind{
-    { {.Mod4Mask},               .XK_d,      Spawn{"dmenu_run",   nil} },
-    { {.Mod4Mask},               .XK_Return, Spawn{"kitty",       nil} },
-    { {.Mod4Mask},               .XK_l,      Spawn{"nemo",        nil} },
-    { {.Mod4Mask},               .XK_w,      Spawn{"zen-browser", nil} },
+    { {.Mod4Mask},               .XK_d,      Spawn{"dmenu_run", "-fn", DMENU_FONT, nil} },
+    { {.Mod4Mask},               .XK_Return, Spawn{"kitty",                        nil} },
+    { {.Mod4Mask},               .XK_l,      Spawn{"nemo",                         nil} },
+    { {.Mod4Mask},               .XK_w,      Spawn{"zen-browser",                  nil} },
 
     { {},  X.KeySym(XF86.AudioRaiseVolume),  Spawn{"wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%+",    nil} },
     { {},  X.KeySym(XF86.AudioLowerVolume),  Spawn{"wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-",    nil} },

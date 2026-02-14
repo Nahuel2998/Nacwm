@@ -117,7 +117,7 @@ bar_status_draw :: proc(cr : ^cairo.cairo_t, monitor_width : i32) {
     pango.layout_get_pixel_size(layout, &size.x, &size.y)
 
     pos := [2]f64{
-        f64(   monitor_width - size.x) - 2,
+        f64(   monitor_width - size.x),
         f64(STYLE.bar.height - size.y) / 2,
     }
     cairo.move_to(cr, pos.x, pos.y)
