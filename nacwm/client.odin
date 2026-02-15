@@ -84,6 +84,24 @@ client_stack_detach :: proc(monitor : ^Monitor, client_idx : Client_Index) {
     }
 }
 
+client_swap :: proc(from_idx, to_idx : Client_Index, monitor_idx : Monitor_Index) {
+    if from_idx == to_idx do return
+
+    monitor := &g_monitors[monitor_idx]
+
+    client := monitor.clients[from_idx]
+    monitor.clients[from_idx] = monitor.clients[to_idx]
+    monitor.clients[to_idx]   = client
+    if      monitor.selected == from_idx do monitor.selected = to_idx
+    else if monitor.selected == to_idx   do monitor.selected = from_idx
+    // TODO: Update stack?
+
+    monitor_arrange(monitor_idx)
+    // Ignore enter so focus due to arrange isn't stolen
+    _ev : X.XEvent
+    for X.CheckMaskEvent(g_display, {.EnterWindow}, &_ev) {}
+}
+
 // TODO: Rather than focus/unfocus I'd like it to be focus_switch
 // A call with CLIENT_NONE will focus the next visible one
 client_focus :: proc(client_idx : Client_Index, monitor_idx := g_monitor_idx) {
@@ -114,7 +132,7 @@ client_focus :: proc(client_idx : Client_Index, monitor_idx := g_monitor_idx) {
     X.SetWindowBorder(g_display, client.window, g_scheme[.Selected].border);
     window_take_focus(client.window, !client.no_focus)
 
-    // TODO: Bars (on all paths)
+    // TODO: Bar title (on all paths)
 }
 
 client_unfocus :: proc($set_focus : bool) {

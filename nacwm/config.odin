@@ -83,6 +83,8 @@ BINDINGS := [?]Keybind{
 
     { {.Mod4Mask},               .XK_n,      Select{-1} },
     { {.Mod4Mask},               .XK_e,      Select{+1} },
+    { {.Mod4Mask, .ShiftMask},   .XK_n,      Move{-1} },
+    { {.Mod4Mask, .ShiftMask},   .XK_e,      Move{+1} },
 
     { {.Mod4Mask},               .XK_m,      SelectMonitor{1} },
     { {.Mod4Mask},               .XK_h,      SelectMonitor{0} },

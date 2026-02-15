@@ -9,12 +9,13 @@ Action :: union {
     Thats,
     Spawn,
     View,
-    Shoot,
-    Select,
     SelectMonitor,
+    Select,
+    Move,
     ToTag,
     ToMonitor,
     Float,
+    Shoot,
     MouseMove,
     MouseResize,
     MasterResize,
@@ -24,12 +25,13 @@ Rebirth :: distinct struct{ }
 Thats   :: distinct struct{ }
 Spawn :: distinct []cstring
 View  :: distinct Tags
-Shoot :: distinct struct{ unkindly : bool }
-Select        :: distinct struct{ delta : i8 }
 SelectMonitor :: distinct struct{ target : Monitor_Index }
+Select        :: distinct struct{ delta : i8 }
+Move      :: distinct struct{ delta : i8 }
 ToTag     :: distinct Tags
 ToMonitor :: distinct struct{ target : Monitor_Index }
 Float     :: distinct struct{ }
+Shoot     :: distinct struct{ unkindly : bool }
 MouseMove   :: distinct struct{ }
 MouseResize :: distinct struct{ }
 MasterResize :: distinct struct{ delta : f32 }
@@ -113,6 +115,27 @@ do_action :: proc(action : Action) {
             if until == 0 do break
         }
         client_focus(client_idx)
+
+    // TODO: This repeats code from above
+    case Move:
+        monitor    := g_monitors[g_monitor_idx]
+        client_idx := monitor.selected
+        if client_idx == CLIENT_NONE do return
+
+        client := monitor.clients[client_idx]
+        if client.floating do return
+
+        incr  := int(0 < a.delta) - int(a.delta < 0)
+        until := abs(a.delta)
+        for {
+            client_idx += incr
+            client_idx %= len(monitor.clients)
+            if client_idx < 0 do client_idx += len(monitor.clients)
+
+            if client_is_visible(client_idx, monitor) && !client.floating do until -= 1
+            if until == 0 do break
+        }
+        client_swap(monitor.selected, client_idx, g_monitor_idx)
 
     case SelectMonitor:
         if g_monitor_idx == a.target do return
