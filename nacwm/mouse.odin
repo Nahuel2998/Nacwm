@@ -19,7 +19,7 @@ client_mouse_action :: proc($action : Mouse_Action) {
     client := &g_monitors[g_monitor_idx].clients[client_idx]
     if client.fullscreen do return
 
-    monitor_restack()
+    client_raise(client^)
 
     grab_res := X.GrabPointer(g_display, g_screen.root, false, MOUSE_MASK, .GrabModeAsync, .GrabModeAsync, X.None, g_cursors[.Move], X.CurrentTime)
     if grab_res != GRAB_SUCCESS do return

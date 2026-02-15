@@ -300,7 +300,6 @@ recv_button_press :: proc(event : X.XEvent) {
     }
 
     if client_idx != CLIENT_NONE {
-        monitor_restack(monitor_idx)
         X.AllowEvents(g_display, .ReplayPointer, X.CurrentTime)
         click = .Client
     }

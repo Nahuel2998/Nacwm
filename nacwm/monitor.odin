@@ -131,23 +131,6 @@ monitor_pop :: proc() -> (changed : bool) {
     return
 }
 
-monitor_restack :: proc(monitor_idx := g_monitor_idx) {
-    monitor := g_monitors[monitor_idx]
-    if monitor.selected == CLIENT_NONE do return
-
-    client := monitor.clients[monitor.selected]
-    if client.floating {
-        X.RaiseWindow(g_display, client.window)
-    }
-
-    // TODO: Restack tiled ones
-
-    _ev : X.XEvent
-    X.Sync(g_display, false)
-    // Ignore EnterNotify events caused by this
-    for X.CheckMaskEvent(g_display, {.EnterWindow}, &_ev) {}
-}
-
 monitor_show_hide :: proc(monitor : Monitor) {
     // Show clients top -> down
     #reverse for client_idx in monitor.stack {

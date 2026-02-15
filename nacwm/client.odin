@@ -131,17 +131,37 @@ client_unfocus :: proc($set_focus : bool) {
 // Floats or tiles a client
 client_float :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
     if client_idx == CLIENT_NONE do return
-    // TODO: What to do with fullscreen windows?
 
-    client := &g_monitors[monitor_idx].clients[client_idx]
-    if client_is_fixed(client^) do return
+    monitor := &g_monitors[monitor_idx]
+    client  := &monitor.clients[client_idx]
+    if client.fullscreen || client_is_fixed(client^) do return
 
     client.floating = !client.floating
     if client.floating {
         client_resize(client, client.pos, client.size)
-        X.RaiseWindow(g_display, client.window)
     }
+    client_restack(client^, monitor^)
     monitor_arrange(monitor_idx)
+}
+
+// Do what I mean
+client_restack :: #force_inline proc(client : Client, monitor : Monitor) {
+    if client.floating do client_raise(client)
+    else               do client_bury(client, monitor)
+}
+// Raise a floating window above others
+client_raise :: #force_inline proc(client : Client) {
+    if !client.floating do return
+    X.RaiseWindow(g_display, client.window)
+}
+// Bury a tiled window below the bar
+client_bury :: #force_inline proc(client : Client, monitor : Monitor) {
+    if client.floating do return
+    config := X.XWindowChanges{
+        stack_mode = .Below,
+        sibling    = monitor.bar.window,
+    }
+    X.ConfigureWindow(g_display, client.window, {.CWSibling, .CWStackMode}, &config)
 }
 
 // Enter or exit fullscreen
@@ -297,9 +317,7 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
         client.floating = transient_for != X.None || client_is_fixed(client)
     }
     client_update_type(&client, monitor_idx)
-    if client.floating {
-        X.RaiseWindow(g_display, client.window)
-    }
+    client_restack(client, monitor)
 
     client_idx := client_attach(monitor_idx, client)
     client_stack_attach(monitor_idx, client_idx)
