@@ -33,7 +33,7 @@ bar_create :: proc(monitor : Monitor) -> (bar : Bar) {
         background_pixmap = X.ParentRelative,
         event_mask        = {.ButtonPress, .Exposure},
     }
-    class_hint := X.XClassHint{ "nacwm", "nacwm" }
+    class_hint := X.XClassHint{ WM_NAME, WM_NAME }
 
     bar.window = X.CreateWindow(
         g_display, g_screen.root,

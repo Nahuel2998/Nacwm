@@ -5,7 +5,7 @@ import "core:c/libc"
 import "core:strings"
 import X "vendor:x11/xlib"
 
-WM_NAME : string : "nacwm"
+WM_NAME :: "nacwm"
 
 XA_WINDOW :: X.Atom(33)
 XA_STRING :: X.Atom(31)
@@ -60,8 +60,9 @@ setup_atoms :: proc() {
 setup_wmhints :: proc() {
     utf8str := X.InternAtom(g_display, "UTF8_STRING", false)
 
+    wm_name := WM_NAME
     g_wmcheckwin = X.CreateSimpleWindow(g_display, g_screen.root, 0, 0, 1, 1, 0, 0, 0)
-    X.ChangeProperty(g_display, g_wmcheckwin,  g_atoms.net[.WM_Name],     utf8str,  8, X.PropModeReplace, raw_data(WM_NAME), len(WM_NAME))
+    X.ChangeProperty(g_display, g_wmcheckwin,  g_atoms.net[.WM_Name],     utf8str,  8, X.PropModeReplace, raw_data(wm_name), len(WM_NAME))
     X.ChangeProperty(g_display, g_wmcheckwin,  g_atoms.net[.WM_Check],  XA_WINDOW, 32, X.PropModeReplace, &g_wmcheckwin, 1)
     X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.WM_Check],  XA_WINDOW, 32, X.PropModeReplace, &g_wmcheckwin, 1)
 

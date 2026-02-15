@@ -14,7 +14,7 @@ STYLE :: Style{
         width = 2,
         color = {
             .Normal   = "dim gray",
-            .Selected = "cornflower blue",
+            .Selected = "dodger blue",
         }
     },
     bar = {

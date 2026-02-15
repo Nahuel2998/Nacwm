@@ -10,7 +10,7 @@ import X "vendor:x11/xlib"
 g_display : ^X.Display
 
 Screen_Info :: struct {
-    id : i32,
+    id   : i32,
     size : [2]i32,
     root : X.Window,
 }

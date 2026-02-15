@@ -18,9 +18,10 @@ Client :: struct {
         max : [2]i32,
         valid : bool,
     },
-
-    floating : bool,
     no_focus : bool,
+
+    floating   : bool,
+    fullscreen : bool,
 
     tags : Tags,
 
