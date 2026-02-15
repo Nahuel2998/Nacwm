@@ -25,6 +25,15 @@ Client :: struct {
 
     tags : Tags,
 
+    // Stuff to restore after fullscreen
+    // TODO: Maybe this could be in another array since it's very uncommon
+    old_state : struct {
+        floating : bool,
+        pos      : [2]i32,
+        size     : [2]i32,
+        border   : i32,
+    },
+
     // Stuff to restore after unmanaging
     original : struct {
         border : i32,
@@ -135,6 +144,41 @@ client_float :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
     monitor_arrange(monitor_idx)
 }
 
+// Enter or exit fullscreen
+client_fullscreen :: proc(client : ^Client, monitor_idx : Monitor_Index, on : bool) {
+    if on do client_fullscreen_enter(client, monitor_idx)
+    else  do client_fullscreen_exit( client, monitor_idx )
+}
+client_fullscreen_enter :: proc(client : ^Client, monitor_idx : Monitor_Index) {
+    if client.fullscreen do return
+
+    X.ChangeProperty(g_display, client.window, g_atoms.net[.WM_State], X.XA_ATOM, 32, X.PropModeReplace, &g_atoms.net[.WM_Fullscreen], 1)
+    client.old_state = {
+        floating = client.floating,
+        pos      = client.pos,
+        size     = client.size,
+        border   = client.border,
+    }
+    client.border     = 0
+    client.floating   = true
+    client.fullscreen = true
+
+    monitor := g_monitors[monitor_idx]
+    _client_resize(client, monitor.pos, monitor.size)
+    X.RaiseWindow(g_display, client.window)
+}
+client_fullscreen_exit :: proc(client : ^Client, monitor_idx : Monitor_Index) {
+    if !client.fullscreen do return
+
+    X.ChangeProperty(g_display, client.window, g_atoms.net[.WM_State], X.XA_ATOM, 32, X.PropModeReplace, nil, 0)
+    client.border     = client.old_state.border
+    client.floating   = client.old_state.floating
+    client.fullscreen = false
+
+    _client_resize(client, client.old_state.pos, client.old_state.size)
+    monitor_arrange(monitor_idx)
+}
+
 client_kill :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index, kindly := true) {
     if client_idx == CLIENT_NONE do return
 
@@ -181,20 +225,26 @@ client_switch_monitor :: proc(client_idx : Client_Index, old_monitor_idx, new_mo
     monitor_arrange_all()
 }
 
+// Resizes a client, minds size hints
 client_resize :: proc(client : ^Client, pos : [2]i32, size : [2]i32) {
     pos, size := pos, size
     if !apply_size_hints(client, &pos, &size) do return
 
+    _client_resize(client, pos, size)
+}
+// Resizes a client, doesn't mind size hints
+_client_resize :: proc(client : ^Client, pos : [2]i32, size : [2]i32) {
     client.pos  = pos
     client.size = size
 
     wc := X.XWindowChanges{
-        x      = pos.x,
-        y      = pos.y,
-        width  = size.x,
-        height = size.y,
+        x            = pos.x,
+        y            = pos.y,
+        width        = size.x,
+        height       = size.y,
+        border_width = client.border,
     }
-    X.ConfigureWindow(g_display, client.window, {.CWX, .CWY, .CWWidth, .CWHeight}, &wc)
+    X.ConfigureWindow(g_display, client.window, {.CWX, .CWY, .CWWidth, .CWHeight, .CWBorderWidth}, &wc)
     send_configure_notify(client.window, pos, size, client.border)
 
     X.Sync(g_display, false)
@@ -246,7 +296,7 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
     if !client.floating {
         client.floating = transient_for != X.None || client_is_fixed(client)
     }
-    client_update_type(&client)
+    client_update_type(&client, monitor_idx)
     if client.floating {
         X.RaiseWindow(g_display, client.window)
     }
@@ -314,4 +364,13 @@ client_is_visible :: #force_inline proc(client_idx : Client_Index, monitor : Mon
     assert(client_idx >= 0)
     client := monitor.clients[client_idx]
     return card(client.tags & monitor.tags) > 0
+}
+
+client_size_real :: #force_inline proc(client : Client) -> [2]i32 {
+    return client.size + 2 * client.border
+}
+
+client_is_fixed :: #force_inline proc(client : Client) -> bool {
+    return client.hints.min != {0, 0} \
+        && client.hints.min == client.hints.max
 }

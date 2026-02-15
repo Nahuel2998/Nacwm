@@ -156,8 +156,7 @@ monitor_show_hide :: proc(monitor : Monitor) {
 
         X.MoveWindow(g_display, client.window, client.pos.x, client.pos.y)
 
-        // TODO: Ignore fullscreen ones
-        if client.floating {
+        if client.floating && !client.fullscreen {
             client_resize(client, client.pos, client.size)
         }
     }

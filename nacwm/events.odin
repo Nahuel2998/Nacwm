@@ -272,7 +272,7 @@ recv_property_notify :: proc(event : X.XEvent) {
         client_update_name(client)
 
     case g_atoms.net[.WM_Window_Type]:
-        client_update_type(client)
+        client_update_type(client, monitor_idx)
     }
 }
 
@@ -315,5 +315,29 @@ recv_button_press :: proc(event : X.XEvent) {
 }
 
 recv_client_message :: proc(event : X.XEvent) {
-    // TODO: handle fullscreening and urgency
+    event := event.xclient
+
+    monitor_idx, client_idx := client_from_window(event.window)
+    if client_idx == CLIENT_NONE do return
+
+    if event.message_type == g_atoms.net[.WM_State] {
+        is_fullscreen_event := X.Atom(event.data.l[1]) == g_atoms.net[.WM_Fullscreen] \
+                            || X.Atom(event.data.l[2]) == g_atoms.net[.WM_Fullscreen]
+        if !is_fullscreen_event do return
+
+        FULLSCREEN_ADD    :: 1
+        FULLSCREEN_TOGGLE :: 2
+        client := &g_monitors[monitor_idx].clients[client_idx]
+
+        on : bool
+        switch event.data.l[0] {
+        case FULLSCREEN_ADD:
+            on = true
+        case FULLSCREEN_TOGGLE:
+            on = !client.fullscreen
+        }
+        client_fullscreen(client, monitor_idx, on)
+    }
+
+    // TODO: handle urgency
 }

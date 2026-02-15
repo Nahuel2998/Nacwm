@@ -99,6 +99,9 @@ do_action :: proc(action : Action) {
         client_idx := monitor.selected
         if client_idx == CLIENT_NONE do return
 
+        client := monitor.clients[client_idx]
+        if client.fullscreen do return
+
         incr  := int(0 < a.delta) - int(a.delta < 0)
         until := abs(a.delta)
         for {

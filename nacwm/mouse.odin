@@ -17,7 +17,7 @@ client_mouse_action :: proc($action : Mouse_Action) {
     if client_idx == CLIENT_NONE do return
 
     client := &g_monitors[g_monitor_idx].clients[client_idx]
-    // TODO: Do something special with fullscreen'd windows
+    if client.fullscreen do return
 
     monitor_restack()
 
