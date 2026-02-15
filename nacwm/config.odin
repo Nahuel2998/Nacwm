@@ -11,10 +11,10 @@ BAR_STATUS_FALLBACK :: "Now | Today"
 
 STYLE :: Style{
     border = {
-        width = 1,
+        width = 2,
         color = {
             .Normal   = "dim gray",
-            .Selected = "red",
+            .Selected = "cornflower blue",
         }
     },
     bar = {
