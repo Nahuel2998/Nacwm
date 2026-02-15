@@ -93,7 +93,6 @@ bar_draw :: proc(monitor : Monitor) {
     for t in ~(Tags{}) {
         cairo.arc(cr, pos_x, BAR_CENTER, BAR_CENTER - 4, 0, 2 * math.PI)
 
-        color : Cairo_Color
         if      t in monitor.tags do color = STYLE.bar.tags[.Active]
         else if t in has_clients  do color = STYLE.bar.tags[.Used]
         else                      do color = STYLE.bar.tags[.Unused]

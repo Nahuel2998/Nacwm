@@ -78,12 +78,6 @@ client_mouse_action :: proc($action : Mouse_Action) {
     }
     X.UngrabPointer(g_display, X.CurrentTime)
 
-    when action == .Resize {
-        _ev : X.XEvent
-        // Ignore EnterNotify events caused by this
-        for X.CheckMaskEvent(g_display, {.EnterWindow}, &_ev) {}
-    }
-
     monitor_idx := monitor_idx_from_rect(client.pos, client.size)
     if monitor_idx != g_monitor_idx {
         old_monitor_idx := g_monitor_idx
