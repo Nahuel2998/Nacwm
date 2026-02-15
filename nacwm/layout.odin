@@ -36,7 +36,7 @@ monitor_tile :: proc(monitor : Monitor) {
         }
         else {
             size := stack_size - (2 * client.border)
-            if i == (num_tiled - 1) do size -= 0.5 * GAPS_WIDTH
+            if i == (num_tiled - 1) do size.y -= 0.5 * GAPS_WIDTH
             client_resize(
                 &client,
                 stack_pos + { 0.5 * GAPS_WIDTH, GAPS_WIDTH },
