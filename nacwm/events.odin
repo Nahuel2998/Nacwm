@@ -118,15 +118,18 @@ recv_configure_request :: proc(event : X.XEvent) {
     monitor := g_monitors[monitor_idx]
     client  := &monitor.clients[client_idx]
     if !client.floating {
-        send_configure_notify(client.window, client.pos, client.size, event.border_width)
+        send_configure_notify(client.window, client.pos, client.size, client.border)
         return
     }
 
-    if .CWX      in mask do client.pos.x  = monitor.pos.x  + event.x
-    if .CWY      in mask do client.pos.y  = monitor.pos.y  + event.y
-    if .CWWidth  in mask do client.size.x = monitor.size.x + event.width
-    if .CWHeight in mask do client.size.y = monitor.size.y + event.height
+    if .CWX           in mask do client.pos.x  = event.x + monitor.pos.x
+    if .CWY           in mask do client.pos.y  = event.y + monitor.pos.y
+    if .CWWidth       in mask do client.size.x = event.width
+    if .CWHeight      in mask do client.size.y = event.height
+    if .CWBorderWidth in mask do client.border = event.border_width
     client_ensure_onscreen(client, monitor)
+
+    send_configure_notify(client.window, client.pos, client.size, client.border)
 
     if client_is_visible(client_idx, monitor) {
         X.MoveResizeWindow(g_display, client.window, client.pos.x, client.pos.y, cast(u32)client.size.x, cast(u32)client.size.y)
