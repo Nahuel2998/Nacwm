@@ -160,7 +160,14 @@ recv_configure_notify :: proc(event : X.XEvent) {
     if !(setup_monitors() || changed) do return
 
     setup_bars()
-    // TODO: fixup fullscreen'd monitors, reposition bars
+    for &monitor in g_monitors {
+        // Fixup fullscreen windows
+        for &client in monitor.clients do if client.fullscreen {
+            _client_resize(&client, monitor.pos, monitor.size)
+        }
+        // Fixup bars
+        X.MoveResizeWindow(g_display, monitor.bar.window, monitor.pos.x, monitor.pos.y, cast(u32)monitor.size.x, cast(u32)STYLE.bar.height)
+    }
 
     client_focus(CLIENT_NONE)
     monitor_arrange_all()
@@ -185,6 +192,7 @@ recv_enter_notify :: proc(event : X.XEvent) {
         monitor_idx = monitor_idx_from_window(event.window)
     }
 
+    // log.debug("Entered monitor/client:", monitor_idx, "/", client_idx)
     client_focus(client_idx, monitor_idx)
 }
 
