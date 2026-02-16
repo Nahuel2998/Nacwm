@@ -236,9 +236,6 @@ recv_map_request :: proc(event : X.XEvent) {
     window_manage(event.window, attrs, trans_for)
 }
 
-// TODO: Doesn't perfectly mimick dwm behaviour
-// When focusing another monitor and moving mouse in previous, dwm doesn't focus previous
-// This, however, does
 recv_motion_notify :: proc(event : X.XEvent) {
     event := event.xmotion
 

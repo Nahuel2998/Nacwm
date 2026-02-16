@@ -97,9 +97,6 @@ client_swap :: proc(from_idx, to_idx : Client_Index, monitor_idx : Monitor_Index
     // TODO: Update stack?
 
     monitor_arrange(monitor_idx)
-    // Ignore enter so focus due to arrange isn't stolen
-    _ev : X.XEvent
-    for X.CheckMaskEvent(g_display, {.EnterWindow}, &_ev) {}
 }
 
 // TODO: Rather than focus/unfocus I'd like it to be focus_switch

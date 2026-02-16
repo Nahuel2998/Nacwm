@@ -159,6 +159,10 @@ monitor_arrange :: proc(monitor_idx := g_monitor_idx) {
 
     monitor_show_hide(monitor)
     monitor_tile(monitor)
+
+    _ev : X.XEvent
+    // Ignore enter events so focus isn't stolen by a window moving under cursor
+    for X.CheckMaskEvent(g_display, {.EnterWindow}, &_ev) {}
 }
 
 monitor_arrange_all :: proc() {
