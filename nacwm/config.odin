@@ -94,7 +94,8 @@ BINDINGS := [?]Keybind{
     { {.Mod4Mask, .ControlMask}, .XK_m,      MasterResize{-0.05} },
     { {.Mod4Mask, .ControlMask}, .XK_h,      MasterResize{+0.05} },
 
-    { {.Mod4Mask},               .XK_t,      Float{} },
+    { {.Mod4Mask},               .XK_t,      Float{}  },
+    { {.Mod4Mask},               .XK_c,      Center{} },
 
     { {.Mod4Mask},               .XK_q,      Shoot{}     },
     { {.Mod4Mask, .ShiftMask},   .XK_q,      Shoot{true} },

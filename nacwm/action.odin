@@ -15,6 +15,7 @@ Action :: union {
     ToTag,
     ToMonitor,
     Float,
+    Center,
     Shoot,
     MouseMove,
     MouseResize,
@@ -31,6 +32,7 @@ Move      :: distinct struct{ delta : i8 }
 ToTag     :: distinct Tags
 ToMonitor :: distinct struct{ target : Monitor_Index }
 Float     :: distinct struct{ }
+Center    :: distinct struct{ }
 Shoot     :: distinct struct{ unkindly : bool }
 MouseMove   :: distinct struct{ }
 MouseResize :: distinct struct{ }
@@ -91,10 +93,6 @@ do_action :: proc(action : Action) {
         client_focus(CLIENT_NONE)
         monitor_arrange(g_monitor_idx)
         bar_draw(monitor^)
-
-    case Shoot:
-        client_idx := g_monitors[g_monitor_idx].selected
-        client_kill(g_monitor_idx, client_idx, !a.unkindly)
 
     case Select:
         monitor    := g_monitors[g_monitor_idx]
@@ -163,6 +161,21 @@ do_action :: proc(action : Action) {
     case Float:
         client_idx := g_monitors[g_monitor_idx].selected
         client_float(g_monitor_idx, client_idx)
+
+    case Center:
+        monitor    := &g_monitors[g_monitor_idx]
+        client_idx := monitor.selected
+        if client_idx == CLIENT_NONE do return
+
+        client := &monitor.clients[client_idx]
+        if !client.floating do return
+
+        pos := monitor.pos + (monitor.size - client.size) / 2
+        client_resize(client, pos, client.size)
+
+    case Shoot:
+        client_idx := g_monitors[g_monitor_idx].selected
+        client_kill(g_monitor_idx, client_idx, !a.unkindly)
 
     case MouseMove:
         client_mouse_action(.Move)
