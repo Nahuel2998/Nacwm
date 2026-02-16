@@ -122,13 +122,27 @@ recv_configure_request :: proc(event : X.XEvent) {
         return
     }
 
-    if .CWX           in mask do client.pos.x  = event.x + monitor.pos.x
-    if .CWY           in mask do client.pos.y  = event.y + monitor.pos.y
+    when ODIN_DEBUG {
+        ConfigureDebug :: struct {
+            pos    : [2]i32,
+            size   : [2]i32,
+            border : i32,
+        }
+        before := ConfigureDebug{ client.pos, client.size, client.border }
+    }
+
+    if .CWX           in mask do client.pos.x  = event.x // + monitor.pos.x // NOTE: dwm adds the monitor.pos here, but really I haven't seen
+    if .CWY           in mask do client.pos.y  = event.y // + monitor.pos.y //       a single window sending these as relative to monitor
     if .CWWidth       in mask do client.size.x = event.width
     if .CWHeight      in mask do client.size.y = event.height
     if .CWBorderWidth in mask do client.border = event.border_width
     client_ensure_onscreen(client, monitor)
 
+    when ODIN_DEBUG {
+        requested := ConfigureDebug{ {event.x, event.y}, {event.width, event.height}, event.border_width }
+        after     := ConfigureDebug{ client.pos, client.size, client.border }
+        log.debug("Configuring:", client.name, "\n  Before:   ", before, "\n  Requested:", requested, "\n  After:    ", after)
+    }
     send_configure_notify(client.window, client.pos, client.size, client.border)
 
     if client_is_visible(client_idx, monitor) {
