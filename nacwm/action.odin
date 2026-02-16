@@ -102,19 +102,9 @@ do_action :: proc(action : Action) {
         client := monitor.clients[client_idx]
         if client.fullscreen do return
 
-        incr  := int(0 < a.delta) - int(a.delta < 0)
-        until := abs(a.delta)
-        for {
-            client_idx += incr
-            client_idx %= len(monitor.clients)
-            if client_idx < 0 do client_idx += len(monitor.clients)
-
-            if client_is_visible(client_idx, monitor) do until -= 1
-            if until == 0 do break
-        }
+        client_idx = nth_matching_client(monitor, client_idx, a.delta, client_is_visible)
         client_focus(client_idx)
 
-    // TODO: This repeats code from above
     case Move:
         monitor    := g_monitors[g_monitor_idx]
         client_idx := monitor.selected
@@ -123,16 +113,15 @@ do_action :: proc(action : Action) {
         client := monitor.clients[client_idx]
         if client.floating do return
 
-        incr  := int(0 < a.delta) - int(a.delta < 0)
-        until := abs(a.delta)
-        for {
-            client_idx += incr
-            client_idx %= len(monitor.clients)
-            if client_idx < 0 do client_idx += len(monitor.clients)
-
-            if client_is_visible(client_idx, monitor) && !client.floating do until -= 1
-            if until == 0 do break
-        }
+        client_idx = nth_matching_client(
+            monitor,
+            client_idx,
+            a.delta,
+            proc(idx : Client_Index, mon : Monitor) -> bool {
+                clt := mon.clients[idx]
+                return client_is_visible(idx, mon) && !clt.floating
+            },
+        )
         client_swap(monitor.selected, client_idx, g_monitor_idx)
 
     case SelectMonitor:

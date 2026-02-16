@@ -110,13 +110,6 @@ BUTTON_BINDINGS := [?]Buttonbind{
 }
 
 /*
-static const Key keys[] = {
-    /* modifier                     key        function        argument */
-    { MODKEY|ShiftMask,             XK_n,      zoom,           {0} },
-    { MODKEY|ShiftMask,             XK_e,      zoom,           {0} },
-*/
-
-/*
     { ClkTagBar,            0,              Button1,        view,           {0} },
     { ClkTagBar,            0,              Button3,        toggleview,     {0} },
     { ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
