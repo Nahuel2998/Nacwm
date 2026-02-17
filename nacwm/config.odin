@@ -15,7 +15,7 @@ STYLE :: Style{
         color = {
             .Normal   = "dim gray",
             .Selected = "dodger blue",
-        }
+        },
     },
     bar = {
         height = 22,

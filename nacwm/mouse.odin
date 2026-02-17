@@ -13,10 +13,9 @@ Mouse_Action :: enum {
 }
 
 client_mouse_action :: proc($action : Mouse_Action) {
-    client_idx := g_monitors[g_monitor_idx].selected
-    if client_idx == CLIENT_NONE do return
+    if g_client_idx == CLIENT_NONE do return
 
-    client := &g_monitors[g_monitor_idx].clients[client_idx]
+    client := &g_monitors[g_monitor_idx].clients[g_client_idx]
     if client.fullscreen do return
 
     client_raise(client^)
@@ -72,7 +71,7 @@ client_mouse_action :: proc($action : Mouse_Action) {
                 new_size = old_size + delta
             }
 
-            if !client.floating do client_float(g_monitor_idx, client_idx)
+            if !client.floating do client_float(g_monitor_idx, g_client_idx)
             client_resize(client, new_pos, new_size)
         }
     }
@@ -82,6 +81,6 @@ client_mouse_action :: proc($action : Mouse_Action) {
     if monitor_idx != g_monitor_idx {
         old_monitor_idx := g_monitor_idx
         g_monitor_idx    = monitor_idx
-        client_switch_monitor(client_idx, old_monitor_idx, monitor_idx, move=false)
+        client_switch_monitor(g_client_idx, old_monitor_idx, monitor_idx, move=false)
     }
 }

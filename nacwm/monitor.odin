@@ -12,9 +12,8 @@ Monitor :: struct {
     pos  : [2]i32,
     size : [2]i32,
 
-    clients  : [dynamic]Client,
-    selected : Client_Index,
-    stack    : [dynamic]Client_Index,
+    clients : [dynamic]Client,
+    stack   : [dynamic]Client_Index,
 
     master_factor : f32,
     tags : Tags,
@@ -95,8 +94,7 @@ monitor_update :: #force_inline proc(monitor : ^Monitor, geom : xinerama.ScreenI
 
 monitor_new :: proc() {
     monitor := Monitor{
-        selected = CLIENT_NONE,
-        tags     = {1},
+        tags = {1},
 
         master_factor = MASTER_FACTOR,
     }

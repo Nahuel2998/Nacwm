@@ -40,6 +40,9 @@ Client :: struct {
     },
 }
 
+// Currently selected client, index into g_monitors[g_monitor_idx].clients
+g_client_idx := CLIENT_NONE
+
 client_attach :: proc(monitor_idx : Monitor_Index, client : Client) -> Client_Index {
     append(&g_monitors[monitor_idx].clients, client)
     return len(g_monitors[monitor_idx].clients) - 1
@@ -55,13 +58,16 @@ client_detach :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
     if client_idx == len(monitor.clients) do return
 
     // Otherwise, fixup the indices
-    if monitor.selected == len(monitor.clients) {
-        monitor.selected = client_idx
-    }
     #reverse for &idx in monitor.stack {
         if idx != len(monitor.clients) do continue
         idx = client_idx
         break
+    }
+
+    // TODO: This check can begone when g_clients is used
+    if g_monitor_idx != monitor_idx do return
+    if g_client_idx == len(monitor.clients) {
+        g_client_idx = client_idx
     }
 }
 
@@ -70,17 +76,20 @@ client_stack_attach :: proc(monitor_idx : Monitor_Index, client_idx : Client_Ind
 }
 
 // NOTE: When paired with `detach`, it must be called BEFORE
-client_stack_detach :: proc(monitor : ^Monitor, client_idx : Client_Index) {
+client_stack_detach :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
     if client_idx == CLIENT_NONE do return
 
+    monitor := &g_monitors[monitor_idx]
     #reverse for idx, i in monitor.stack {
         if idx != client_idx do continue
         ordered_remove(&monitor.stack, i)
         break
     }
 
-    if monitor.selected == client_idx {
-        monitor.selected = monitor_first_visible_client(monitor^)
+    // TODO: This check can begone when g_clients is used
+    if g_monitor_idx != monitor_idx do return
+    if g_client_idx == client_idx {
+        g_client_idx = monitor_first_visible_client(monitor^)
     }
 }
 
@@ -93,11 +102,13 @@ client_swap :: proc(from_idx, to_idx : Client_Index, monitor_idx : Monitor_Index
     monitor.clients[from_idx] = monitor.clients[to_idx]
     monitor.clients[to_idx]   = client
 
-    if      monitor.selected == from_idx do monitor.selected = to_idx
-    else if monitor.selected ==   to_idx do monitor.selected = from_idx
+    if g_monitor_idx == monitor_idx {
+        if      g_client_idx == from_idx do g_client_idx = to_idx
+        else if g_client_idx ==   to_idx do g_client_idx = from_idx
+    }
     #reverse for &client_idx in monitor.stack {
-        if        client_idx == from_idx do client_idx = to_idx
-        else if   client_idx ==   to_idx do client_idx = from_idx
+        if        client_idx == from_idx do   client_idx = to_idx
+        else if   client_idx ==   to_idx do   client_idx = from_idx
     }
 
     monitor_arrange(monitor_idx)
@@ -106,28 +117,28 @@ client_swap :: proc(from_idx, to_idx : Client_Index, monitor_idx : Monitor_Index
 // TODO: Rather than focus/unfocus I'd like it to be focus_switch
 // A call with CLIENT_NONE will focus the next visible one
 client_focus :: proc(client_idx : Client_Index, monitor_idx := g_monitor_idx) {
-    monitor := &g_monitors[monitor_idx]
+    monitor := g_monitors[monitor_idx]
 
     client_idx := client_idx
-    if client_idx == CLIENT_NONE || !client_is_visible(client_idx, monitor^) {
-        client_idx = monitor_first_visible_client(monitor^)
+    if client_idx == CLIENT_NONE || !client_is_visible(client_idx, monitor) {
+        client_idx = monitor_first_visible_client(monitor)
     }
 
-    if g_monitor_idx != monitor_idx || monitor.selected != client_idx {
+    if g_monitor_idx != monitor_idx || g_client_idx != client_idx {
         client_unfocus(false)
         g_monitor_idx = monitor_idx
     }
 
     if client_idx == CLIENT_NONE {
         focus_reset()
-        monitor.selected = CLIENT_NONE
+        g_client_idx = CLIENT_NONE
         return
     }
     client := monitor.clients[client_idx]
 
-    client_stack_detach(monitor, client_idx)
+    client_stack_detach(monitor_idx, client_idx)
     client_stack_attach(monitor_idx, client_idx)
-    monitor.selected = client_idx
+    g_client_idx = client_idx
 
     grab_buttons(client.window, true)
     X.SetWindowBorder(g_display, client.window, g_scheme[.Selected].border);
@@ -137,10 +148,9 @@ client_focus :: proc(client_idx : Client_Index, monitor_idx := g_monitor_idx) {
 }
 
 client_unfocus :: proc($set_focus : bool) {
-    client_idx := g_monitors[g_monitor_idx].selected
-    if client_idx == CLIENT_NONE do return
+    if g_client_idx == CLIENT_NONE do return
 
-    client := g_monitors[g_monitor_idx].clients[client_idx]
+    client := g_monitors[g_monitor_idx].clients[g_client_idx]
     grab_buttons(client.window, false)
     X.SetWindowBorder(g_display, client.window, g_scheme[.Normal].border);
 
@@ -244,8 +254,8 @@ client_switch_monitor :: proc(client_idx : Client_Index, old_monitor_idx, new_mo
     client      := old_monitor.clients[client_idx]
 
     client_unfocus(true)
-    client_stack_detach(old_monitor, client_idx)
-    client_detach(old_monitor_idx, client_idx)
+    client_stack_detach(old_monitor_idx, client_idx)
+    client_detach(      old_monitor_idx, client_idx)
 
     new_monitor := g_monitors[new_monitor_idx]
     client.tags  = new_monitor.tags
@@ -356,8 +366,8 @@ client_unmanage :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index, 
     client  := monitor.clients[client_idx]
 
     delete(client.name)
-    client_stack_detach(monitor, client_idx)
-    client_detach(monitor_idx, client_idx)
+    client_stack_detach(monitor_idx, client_idx)
+    client_detach(      monitor_idx, client_idx)
 
     when !destroyed {
         X.GrabServer(g_display)

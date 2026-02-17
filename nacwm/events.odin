@@ -210,11 +210,10 @@ recv_expose :: proc(event : X.XEvent) {
 recv_focus_in :: proc(event : X.XEvent) {
     event := event.xfocus
 
-    monitor    := g_monitors[g_monitor_idx]
-    client_idx := monitor.selected
-    if client_idx == CLIENT_NONE do return
+    if g_client_idx == CLIENT_NONE do return
 
-    client := monitor.clients[client_idx]
+    monitor := g_monitors[g_monitor_idx]
+    client  := monitor.clients[g_client_idx]
     if client.window != event.window {
         window_take_focus(client.window, !client.no_focus)
     }
@@ -317,7 +316,7 @@ recv_button_press :: proc(event : X.XEvent) {
     click : Click_Kind
     monitor_idx, client_idx := client_from_window(event.window)
     if monitor_idx != g_monitor_idx \
-    || (client_idx != CLIENT_NONE && client_idx != g_monitors[monitor_idx].selected) {
+    || (client_idx != CLIENT_NONE && client_idx != g_client_idx) {
         client_focus(client_idx, monitor_idx)
     }
 
