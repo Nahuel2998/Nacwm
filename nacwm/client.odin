@@ -92,9 +92,13 @@ client_swap :: proc(from_idx, to_idx : Client_Index, monitor_idx : Monitor_Index
     client := monitor.clients[from_idx]
     monitor.clients[from_idx] = monitor.clients[to_idx]
     monitor.clients[to_idx]   = client
+
     if      monitor.selected == from_idx do monitor.selected = to_idx
-    else if monitor.selected == to_idx   do monitor.selected = from_idx
-    // TODO: Update stack?
+    else if monitor.selected ==   to_idx do monitor.selected = from_idx
+    #reverse for &client_idx in monitor.stack {
+        if        client_idx == from_idx do client_idx = to_idx
+        else if   client_idx ==   to_idx do client_idx = from_idx
+    }
 
     monitor_arrange(monitor_idx)
 }
