@@ -1,7 +1,7 @@
 package nacwm
 
 import "core:c"
-import "core:c/libc"
+import "core:fmt"
 import "core:strings"
 import X "vendor:x11/xlib"
 
@@ -34,7 +34,6 @@ g_atoms : struct {
 
 g_wmcheckwin : X.Window
 
-// TODO: Actually check which of these are unused
 setup_atoms :: proc() {
     g_atoms = {
         wm  = {
@@ -43,7 +42,8 @@ setup_atoms :: proc() {
             .State      = X.InternAtom(g_display, "WM_STATE",         false),
             .Take_Focus = X.InternAtom(g_display, "WM_TAKE_FOCUS",    false),
         },
-        net = {
+        net = { // -- EWMH
+            .Client_List           = X.InternAtom(g_display, "_NET_CLIENT_LIST",           false),
             .Active_Window         = X.InternAtom(g_display, "_NET_ACTIVE_WINDOW",         false),
             .Supported             = X.InternAtom(g_display, "_NET_SUPPORTED",             false),
             .WM_Name               = X.InternAtom(g_display, "_NET_WM_NAME",               false),
@@ -52,7 +52,6 @@ setup_atoms :: proc() {
             .WM_Fullscreen         = X.InternAtom(g_display, "_NET_WM_STATE_FULLSCREEN",   false),
             .WM_Window_Type        = X.InternAtom(g_display, "_NET_WM_WINDOW_TYPE",        false),
             .WM_Window_Type_Dialog = X.InternAtom(g_display, "_NET_WM_WINDOW_TYPE_DIALOG", false),
-            .Client_List           = X.InternAtom(g_display, "_NET_CLIENT_LIST",           false),
         },
     }
 }
@@ -66,7 +65,6 @@ setup_wmhints :: proc() {
     X.ChangeProperty(g_display, g_wmcheckwin,  g_atoms.net[.WM_Check],  XA_WINDOW, 32, X.PropModeReplace, &g_wmcheckwin, 1)
     X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.WM_Check],  XA_WINDOW, 32, X.PropModeReplace, &g_wmcheckwin, 1)
 
-    // -- EWMH
     X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.Supported], X.XA_ATOM, 32, X.PropModeReplace, &g_atoms.net, len(g_atoms.net))
     X.DeleteProperty(g_display, g_screen.root, g_atoms.net[.Client_List])
 }
@@ -92,11 +90,8 @@ client_update_wmhints :: proc(client : ^Client) {
 
     // TODO: Urgency hint
 
-    if .InputHint in hints.flags {
-        client.no_focus = !bool(hints.input)
-    } else {
-        client.no_focus = false
-    }
+    if .InputHint in hints.flags do client.no_focus = !bool(hints.input)
+    else                         do client.no_focus = false
 }
 
 client_update_sizehints :: proc(client : ^Client) {
@@ -178,37 +173,21 @@ get_property :: proc(window : X.Window, prop : X.Atom, x_type : X.Atom, $type : 
     return res^, true
 }
 
-// TODO: Do I really need more than a fixed buffer size?
 get_text_property :: proc(window : X.Window, atom : X.Atom) -> (string, bool) {
-    prop : X.XTextProperty
-    ok := bool(X.GetTextProperty(g_display, window, &prop, atom))
-    if !ok || prop.nitems == 0 do return "", false
-    defer X.Free(prop.value)
-
-    if prop.encoding == XA_STRING {
-        return strings.clone_from_cstring(cstring(prop.value)), true
-    }
-
-    list : [^]cstring
-    num_elems : i32
-    if XmbTextPropertyToTextList(g_display, &prop, &list, &num_elems) >= cast(i32)X.Status.Success \
-    && num_elems > 0 {
-        defer XFreeStringList(list)
-        if list[0] != nil {
-            return strings.clone_from_cstring(cstring(list[0])), true
-        }
-    }
-    return "", false
+    buf : strings.Builder
+    ok := get_text_property_sb(window, atom, &buf)
+    return strings.to_string(buf), ok
 }
 
-get_text_property_buf :: proc(window : X.Window, atom : X.Atom, buf : []u8) -> bool {
+// NOTE: This appends to the sb, maybe clear it first
+get_text_property_sb :: proc(window : X.Window, atom : X.Atom, buf : ^strings.Builder) -> bool {
     prop : X.XTextProperty
     ok := bool(X.GetTextProperty(g_display, window, &prop, atom))
     if !ok || prop.nitems == 0 do return false
     defer X.Free(prop.value)
 
     if prop.encoding == XA_STRING {
-        libc.strncpy(raw_data(buf), cstring(prop.value), len(buf) - 1)
+        fmt.sbprint(buf, cstring(prop.value))
         return true
     }
 
@@ -218,7 +197,7 @@ get_text_property_buf :: proc(window : X.Window, atom : X.Atom, buf : []u8) -> b
     && num_elems > 0 {
         defer XFreeStringList(list)
         if list[0] != nil {
-            libc.strncpy(raw_data(buf), cstring(list[0]), len(buf) - 1)
+            fmt.sbprint(buf, cstring(list[0]))
             return true
         }
     }

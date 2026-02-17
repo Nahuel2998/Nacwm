@@ -1,7 +1,8 @@
 package nacwm
 
-import "core:c/libc"
+import "core:fmt"
 import "core:math"
+import "core:strings"
 import "../vendor/cairo"
 import "../vendor/pango"
 import X "vendor:x11/xlib"
@@ -11,7 +12,7 @@ Bar :: struct {
     surface : ^cairo.surface_t,
 }
 g_bar_font   : ^pango.FontDescription
-g_bar_status : [256]u8
+g_bar_status : strings.Builder
 
 setup_bars :: proc() {
     for &monitor in g_monitors {
@@ -110,7 +111,7 @@ bar_status_draw :: proc(cr : ^cairo.cairo_t, monitor_width : i32) {
     color := STYLE.bar.status
     cairo.set_source_rgb(cr, color.r, color.g, color.b)
     pango.layout_set_font_description(layout, g_bar_font)
-    pango.layout_set_text(layout, cstring(raw_data(g_bar_status[:])), -1)
+    pango.layout_set_text(layout, strings.to_cstring(&g_bar_status), -1)
 
     size : [2]i32
     pango.layout_get_pixel_size(layout, &size.x, &size.y)
@@ -124,9 +125,10 @@ bar_status_draw :: proc(cr : ^cairo.cairo_t, monitor_width : i32) {
 }
 
 bar_status_update :: proc() {
-    ok := get_text_property_buf(g_screen.root, X.XA_WM_NAME, g_bar_status[:])
-    if !ok {
-        libc.strncpy(raw_data(g_bar_status[:]), BAR_STATUS_FALLBACK, len(g_bar_status) - 1)
-    }
+    strings.builder_reset(&g_bar_status)
+
+    ok := get_text_property_sb(g_screen.root, X.XA_WM_NAME, &g_bar_status)
+    if !ok do fmt.sbprint(&g_bar_status, BAR_STATUS_FALLBACK)
+
     bars_draw()
 }
