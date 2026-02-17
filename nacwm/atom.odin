@@ -92,7 +92,7 @@ client_update_wmhints :: proc(client : ^Client) {
 
     // TODO: Urgency hint
 
-    if card(hints.flags & {.InputHint}) > 0 {
+    if .InputHint in hints.flags {
         client.no_focus = !bool(hints.input)
     } else {
         client.no_focus = false

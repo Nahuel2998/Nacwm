@@ -35,10 +35,10 @@ RECORD     :: "/home/nar/.local/bin/record-screen-x11"
 DMENU_FONT :: "monospace:size=10"
 
 RULES := [?]Rule{
-    // class       instance   title                 tags  floating  monitor
-    { "vesktop",   "",        "",                   {1},  false,    1            },
-    { "steam_app", "",        "",                   {},   true,     MONITOR_NONE },
-    { "",          "Toolkit", "Picture-in-Picture", {},   true,     MONITOR_NONE },
+    // class        instance   title       Spawn_Rules{tags  floating  monitor}
+    { {"vesktop",   "",        ""},                   {{1},  false,    1}            },
+    { {"steam_app", "",        ""},                   {{},   true,     MONITOR_NONE} },
+    { {"",          "Toolkit", "Picture-in-Picture"}, {{},   true,     MONITOR_NONE} },
 }
 
 BINDINGS := [?]Keybind{
