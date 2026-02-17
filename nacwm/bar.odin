@@ -5,7 +5,7 @@ import "core:math"
 import "core:strings"
 import "../vendor/cairo"
 import "../vendor/pango"
-import X "vendor:x11/xlib"
+import X "../vendor/x11/xlib"
 
 Bar :: struct {
     window  : X.Window,

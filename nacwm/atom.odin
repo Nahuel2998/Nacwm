@@ -1,14 +1,10 @@
 package nacwm
 
-import "core:c"
 import "core:fmt"
 import "core:strings"
-import X "vendor:x11/xlib"
+import X "../vendor/x11/xlib"
 
 WM_NAME :: "nacwm"
-
-XA_WINDOW :: X.Atom(33)
-XA_STRING :: X.Atom(31)
 
 X_WM_Atom :: enum {
     Protocols,
@@ -61,11 +57,11 @@ setup_wmhints :: proc() {
 
     wm_name := WM_NAME
     g_wmcheckwin = X.CreateSimpleWindow(g_display, g_screen.root, 0, 0, 1, 1, 0, 0, 0)
-    X.ChangeProperty(g_display, g_wmcheckwin,  g_atoms.net[.WM_Name],     utf8str,  8, X.PropModeReplace, raw_data(wm_name), len(WM_NAME))
-    X.ChangeProperty(g_display, g_wmcheckwin,  g_atoms.net[.WM_Check],  XA_WINDOW, 32, X.PropModeReplace, &g_wmcheckwin, 1)
-    X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.WM_Check],  XA_WINDOW, 32, X.PropModeReplace, &g_wmcheckwin, 1)
+    X.ChangeProperty(g_display, g_wmcheckwin,  g_atoms.net[.WM_Name],      utf8str,  8, X.PropModeReplace, raw_data(wm_name), len(WM_NAME))
+    X.ChangeProperty(g_display, g_wmcheckwin,  g_atoms.net[.WM_Check], X.XA_WINDOW, 32, X.PropModeReplace, &g_wmcheckwin, 1)
+    X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.WM_Check], X.XA_WINDOW, 32, X.PropModeReplace, &g_wmcheckwin, 1)
 
-    X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.Supported], X.XA_ATOM, 32, X.PropModeReplace, &g_atoms.net, len(g_atoms.net))
+    X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.Supported],  X.XA_ATOM, 32, X.PropModeReplace, &g_atoms.net, len(g_atoms.net))
     X.DeleteProperty(g_display, g_screen.root, g_atoms.net[.Client_List])
 }
 
@@ -153,14 +149,14 @@ update_client_list :: proc() {
         clients[i] = client.window
         i += 1
     }
-    X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.Client_List], XA_WINDOW, 32, X.PropModeReplace, raw_data(clients), cast(i32)num_clients)
+    X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.Client_List], X.XA_WINDOW, 32, X.PropModeReplace, raw_data(clients), cast(i32)num_clients)
 }
 
 // -- Utils
 get_property :: proc(window : X.Window, prop : X.Atom, x_type : X.Atom, $type : typeid) -> (type, bool) {
     _a : X.Atom
-    _i : c.int
-    _ul, num_items : c.ulong
+    _i : i32
+    _ul, num_items : uint
     data : rawptr
 
     status := X.GetWindowProperty(g_display, window, prop, 0, size_of(type)/size_of(i32), false, x_type, &_a, &_i, &num_items, &_ul, &data)
@@ -186,36 +182,20 @@ get_text_property_sb :: proc(window : X.Window, atom : X.Atom, buf : ^strings.Bu
     if !ok || prop.nitems == 0 do return false
     defer X.Free(prop.value)
 
-    if prop.encoding == XA_STRING {
+    if prop.encoding == X.XA_STRING {
         fmt.sbprint(buf, cstring(prop.value))
         return true
     }
 
     list : [^]cstring
     num_elems : i32
-    if XmbTextPropertyToTextList(g_display, &prop, &list, &num_elems) >= cast(i32)X.Status.Success \
+    if X.mbTextPropertyToTextList(g_display, &prop, &list, &num_elems) >= cast(i32)X.Status.Success \
     && num_elems > 0 {
-        defer XFreeStringList(list)
+        defer X.FreeStringList(list)
         if list[0] != nil {
             fmt.sbprint(buf, cstring(list[0]))
             return true
         }
     }
     return false
-}
-
-// -- Bindings
-foreign import xlib "system:X11"
-@(default_calling_convention="c")
-foreign xlib {
-    XmbTextPropertyToTextList :: proc(
-        display : ^X.Display,
-        text_prop : ^X.XTextProperty,
-        list_return : ^[^]cstring,
-        count_return : ^i32,
-        ) -> i32 ---
-
-    XFreeStringList :: proc(
-        list : [^]cstring,
-        ) ---
 }

@@ -1,7 +1,7 @@
 package nacwm
 
 import "core:strings"
-import X "vendor:x11/xlib"
+import X "../vendor/x11/xlib"
 
 BROKEN :: "_broken_"
 

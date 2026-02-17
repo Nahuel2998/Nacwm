@@ -1,7 +1,7 @@
 package nacwm
 
 import "core:log"
-import X "vendor:x11/xlib"
+import X "../vendor/x11/xlib"
 
 g_handlers := #partial [X.EventType]proc(X.XEvent) {
     .ButtonPress      = recv_button_press,

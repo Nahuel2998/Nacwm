@@ -1,6 +1,6 @@
 package nacwm
 
-import X "vendor:x11/xlib"
+import X "../vendor/x11/xlib"
 
 XF86 :: enum uint {
     AudioLowerVolume  = 0x1008ff11,

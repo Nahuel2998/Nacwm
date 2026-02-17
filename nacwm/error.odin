@@ -1,7 +1,7 @@
 package nacwm
 
 import "core:log"
-import X "vendor:x11/xlib"
+import X "../vendor/x11/xlib"
 
 // vendor:x11/xlib doesn't have proto.h
 // These are just the ones used here

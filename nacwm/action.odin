@@ -2,7 +2,7 @@ package nacwm
 
 import "core:sys/posix"
 import "core:log"
-import X "vendor:x11/xlib"
+import X "../vendor/x11/xlib"
 
 Action :: union {
     Rebirth,

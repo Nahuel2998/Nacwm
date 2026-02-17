@@ -1,6 +1,6 @@
 package nacwm
 
-import X "vendor:x11/xlib"
+import X "../vendor/x11/xlib"
 
 MOUSE_MASK :: BUTTON_MASK | {.PointerMotion}
 

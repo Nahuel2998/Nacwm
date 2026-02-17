@@ -1,6 +1,6 @@
 package nacwm
 
-import X "vendor:x11/xlib"
+import X "../vendor/x11/xlib"
 
 REFRESH_RATE  :: 165
 

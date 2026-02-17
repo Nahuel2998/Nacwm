@@ -1,6 +1,6 @@
 package nacwm
 
-import X "vendor:x11/xlib"
+import X "../vendor/x11/xlib"
 
 CLIENT_NONE :: Client_Index(-1)
 
@@ -341,7 +341,7 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
     client_idx := client_attach(monitor_idx, client)
     client_stack_attach(monitor_idx, client_idx)
 
-    X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.Client_List], XA_WINDOW, 32, X.PropModeAppend, &client.window, 1)
+    X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.Client_List], X.XA_WINDOW, 32, X.PropModeAppend, &client.window, 1)
     window_state_set(client.window, .NormalState)
 
     monitor_arrange(monitor_idx)

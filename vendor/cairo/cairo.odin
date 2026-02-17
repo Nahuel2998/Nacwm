@@ -1,7 +1,7 @@
 package cairo
 
 import "core:c"
-import X "vendor:x11/xlib"
+import X "../../vendor/x11/xlib"
 
 surface_t :: struct{}
 cairo_t   :: struct{}

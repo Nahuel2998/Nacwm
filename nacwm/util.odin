@@ -1,6 +1,6 @@
 package nacwm
 
-import X "vendor:x11/xlib"
+import X "../vendor/x11/xlib"
 import "../vendor/x11/xinerama"
 
 is_geom_unique :: proc(seen : []xinerama.ScreenInfo, geom : xinerama.ScreenInfo) -> bool {

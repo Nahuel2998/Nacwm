@@ -1,7 +1,7 @@
 package nacwm
 
 import "core:log"
-import X "vendor:x11/xlib"
+import X "../vendor/x11/xlib"
 
 Cursor_Type :: enum {
     Normal,

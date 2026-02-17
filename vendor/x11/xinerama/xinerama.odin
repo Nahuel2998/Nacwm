@@ -1,7 +1,7 @@
 package xinerama
 
 import "core:c"
-import X "vendor:x11/xlib"
+import X "../../../vendor/x11/xlib"
 
 ScreenInfo :: struct {
     screen_number : c.int,
