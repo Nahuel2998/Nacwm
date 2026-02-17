@@ -72,7 +72,7 @@ bar_draw :: proc(monitor : Monitor) {
     defer {
         cairo.destroy(cr)
         cairo.surface_flush(bar.surface)
-        X.Flush(g_display) // TODO: dwm uses X.Sync rather than this, why?
+        X.Flush(g_display)
     }
 
     // Background
