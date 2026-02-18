@@ -206,6 +206,7 @@ client_fullscreen_exit :: proc(client : ^Client, monitor_idx : Monitor_Index) {
     client.floating   = client.old_state.floating
     client.fullscreen = false
 
+    if !client.floating do client_bury(client^)
     _client_resize(client, client.old_state.pos, client.old_state.size)
     monitor_arrange(monitor_idx)
 }
