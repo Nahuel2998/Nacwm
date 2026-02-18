@@ -212,9 +212,9 @@ recv_expose :: proc(event : X.XEvent) {
 recv_focus_in :: proc(event : X.XEvent) {
     event := event.xfocus
 
-    // TODO: why?
     if g_client_idx == CLIENT_NONE do return
 
+    // Force focus on the focused window
     client := g_clients[g_client_idx]
     if client.window != event.window {
         window_take_focus(client.window, !client.no_focus)

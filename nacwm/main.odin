@@ -55,7 +55,7 @@ run :: proc() {
     event : X.XEvent
     for g_running {
         X.NextEvent(g_display, &event)
-        if cast(i32)event.type >= len(g_handlers) {
+        if cast(i32)event.type > cast(i32)X.EventType.GenericEvent {
             // Cairo seems to cause event 65
             log.info("Received event outside valid range:", cast(i32)event.type)
             continue
