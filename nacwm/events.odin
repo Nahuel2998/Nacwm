@@ -136,7 +136,7 @@ recv_configure_request :: proc(event : X.XEvent) {
     if .CWWidth       in mask do client.size.x = event.width
     if .CWHeight      in mask do client.size.y = event.height
     if .CWBorderWidth in mask do client.border = event.border_width
-    client_ensure_onscreen(client, monitor)
+    client_ensure_onscreen(client)
 
     when ODIN_DEBUG {
         requested := ConfigureDebug{ {event.x, event.y}, {event.width, event.height}, event.border_width }
@@ -293,7 +293,7 @@ recv_property_notify :: proc(event : X.XEvent) {
         client_update_name(client)
 
     case g_atoms.net[.WM_Window_Type]:
-        client_update_type(client, monitor_idx)
+        client_update_type(client)
     }
 }
 

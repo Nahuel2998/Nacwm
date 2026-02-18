@@ -27,7 +27,7 @@ client_matches :: #force_inline proc(client, filter : Client_Filter) -> bool {
         && strings.contains(client.instance, filter.instance)
 }
 
-client_apply_rules :: proc(client : ^Client) -> (monitor_idx := MONITOR_NONE) {
+client_apply_rules :: proc(client : ^Client) {
     hints : X.XClassHint
     X.GetClassHint(g_display, client.window, &hints)
 
@@ -40,14 +40,14 @@ client_apply_rules :: proc(client : ^Client) -> (monitor_idx := MONITOR_NONE) {
 
         client.floating = rule.spawn.floating
         client.tags     = rule.spawn.tags
-        monitor_idx     = rule.spawn.monitor
+        client.monitor  = rule.spawn.monitor
         break
     }
 
     if hints.res_class != nil do X.Free(cast(rawptr)hints.res_class)
     if hints.res_name  != nil do X.Free(cast(rawptr)hints.res_name)
 
-    if monitor_idx == CLIENT_NONE do monitor_idx = g_monitor_idx
-    if client.tags == {}          do client.tags = g_monitors[monitor_idx].tags
+    if client.monitor == CLIENT_NONE do client.monitor = g_monitor_idx
+    if client.tags    == {}          do client.tags    = g_monitors[client.monitor].tags
     return
 }

@@ -72,6 +72,7 @@ monitor_idx_from_window :: proc(window : X.Window, default := g_monitor_idx) -> 
     return default
 }
 
+// TODO: This'll likely just return Client_Index in the future
 client_from_window :: proc(window : X.Window) -> (Monitor_Index, Client_Index) {
     for monitor, monitor_idx in g_monitors do for client, client_idx in monitor.clients {
         if client.window == window {

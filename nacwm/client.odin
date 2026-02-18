@@ -6,6 +6,8 @@ CLIENT_NONE :: Client_Index(-1)
 
 Client_Index :: int
 Client :: struct {
+    monitor : Monitor_Index,
+
     window : X.Window,
     name   : string,
 
@@ -43,9 +45,9 @@ Client :: struct {
 // Currently selected client, index into g_monitors[g_monitor_idx].clients
 g_client_idx := CLIENT_NONE
 
-client_attach :: proc(monitor_idx : Monitor_Index, client : Client) -> Client_Index {
-    append(&g_monitors[monitor_idx].clients, client)
-    return len(g_monitors[monitor_idx].clients) - 1
+client_attach :: proc(client : Client) -> Client_Index {
+    append(&g_monitors[client.monitor].clients, client)
+    return len(g_monitors[client.monitor].clients) - 1
 }
 
 client_detach :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
@@ -71,6 +73,7 @@ client_detach :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
     }
 }
 
+// TODO: This won't need monitor_idx in the future
 client_stack_attach :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
     append(&g_monitors[monitor_idx].stack, client_idx)
 }
@@ -155,6 +158,8 @@ client_unfocus :: proc($set_focus : bool) {
     X.SetWindowBorder(g_display, client.window, g_scheme[.Normal].border);
 
     when set_focus do focus_reset()
+
+    g_client_idx = CLIENT_NONE
 }
 
 // Floats or tiles a client
@@ -169,14 +174,14 @@ client_float :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
     if client.floating {
         client_resize(client, client.pos, client.size)
     }
-    client_restack(client^, monitor^)
+    client_restack(client^)
     monitor_arrange(monitor_idx)
 }
 
 // Do what I mean
-client_restack :: #force_inline proc(client : Client, monitor : Monitor) {
+client_restack :: #force_inline proc(client : Client) {
     if client.floating do client_raise(client)
-    else               do client_bury(client, monitor)
+    else               do client_bury( client )
 }
 // Raise a floating window above others
 client_raise :: #force_inline proc(client : Client) {
@@ -184,11 +189,11 @@ client_raise :: #force_inline proc(client : Client) {
     X.RaiseWindow(g_display, client.window)
 }
 // Bury a tiled window below the bar
-client_bury :: #force_inline proc(client : Client, monitor : Monitor) {
+client_bury :: #force_inline proc(client : Client) {
     if client.floating do return
     config := X.XWindowChanges{
         stack_mode = .Below,
-        sibling    = monitor.bar.window,
+        sibling    = g_monitors[client.monitor].bar.window,
     }
     X.ConfigureWindow(g_display, client.window, {.CWSibling, .CWStackMode}, &config)
 }
@@ -253,7 +258,11 @@ client_switch_monitor :: proc(client_idx : Client_Index, old_monitor_idx, new_mo
     old_monitor := &g_monitors[old_monitor_idx]
     client      := old_monitor.clients[client_idx]
 
-    client_unfocus(true)
+    if g_monitor_idx == old_monitor_idx {
+        client_unfocus(true)
+        g_monitor_idx = new_monitor_idx
+    }
+
     client_stack_detach(old_monitor_idx, client_idx)
     client_detach(      old_monitor_idx, client_idx)
 
@@ -265,12 +274,14 @@ client_switch_monitor :: proc(client_idx : Client_Index, old_monitor_idx, new_mo
             client.pos += offset
         }
     }
+    client.monitor = new_monitor_idx
 
-    new_client_idx := client_attach(new_monitor_idx, client)
-    client_stack_attach(new_monitor_idx, new_client_idx)
+    new_client_idx := client_attach(client)
+    client_stack_attach(client.monitor, new_client_idx)
 
-    // TODO: Consider whether focus should follow client moved
-    client_focus(CLIENT_NONE)
+    if g_monitor_idx == new_monitor_idx {
+        client_focus(CLIENT_NONE)
+    } 
     monitor_arrange_all()
 }
 
@@ -302,7 +313,8 @@ _client_resize :: proc(client : ^Client, pos : [2]i32, size : [2]i32) {
 window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_for : X.Window = X.None) {
     client := Client{}
 
-    client.window = window
+    client.monitor = MONITOR_NONE
+    client.window  = window
 
     client.pos.x  = attrs.x
     client.pos.y  = attrs.y
@@ -314,21 +326,19 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
 
     client_update_name(&client)
 
-    monitor_idx := MONITOR_NONE
     if transient_for != X.None {
         new_monitor_idx, client_idx := client_from_window(transient_for)
         if client_idx != CLIENT_NONE {
             // Inherit tags and monitor
-            client.tags = g_monitors[new_monitor_idx].clients[client_idx].tags
-            monitor_idx = new_monitor_idx
+            client.tags    = g_monitors[new_monitor_idx].clients[client_idx].tags
+            client.monitor = new_monitor_idx
         }
     }
-    if monitor_idx == MONITOR_NONE {
-        monitor_idx = client_apply_rules(&client)
+    if client.monitor == MONITOR_NONE {
+        client_apply_rules(&client)
     }
-    monitor := g_monitors[monitor_idx]
 
-    client_ensure_onscreen(&client, monitor)
+    client_ensure_onscreen(&client)
 
     changes : X.XWindowChanges
     changes.border_width = client.border
@@ -345,16 +355,16 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
     if !client.floating {
         client.floating = transient_for != X.None || client_is_fixed(client)
     }
-    client_update_type(&client, monitor_idx)
-    client_restack(client, monitor)
+    client_update_type(&client)
+    client_restack(client)
 
-    client_idx := client_attach(monitor_idx, client)
-    client_stack_attach(monitor_idx, client_idx)
+    client_idx := client_attach(client)
+    client_stack_attach(client.monitor, client_idx)
 
     X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.Client_List], X.XA_WINDOW, 32, X.PropModeAppend, &client.window, 1)
     window_state_set(client.window, .NormalState)
 
-    monitor_arrange(monitor_idx)
+    monitor_arrange(client.monitor)
     X.MapWindow(g_display, client.window)
     client_focus(CLIENT_NONE)
 }
@@ -391,8 +401,9 @@ client_unmanage :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index, 
 }
 
 // -- Utils
-client_ensure_onscreen :: proc(client : ^Client, monitor : Monitor) {
+client_ensure_onscreen :: proc(client : ^Client) {
     client_size := client_size_real(client^)
+    monitor := g_monitors[client.monitor]
 
     // br -> Bottom_Right
     client_br  :=  client.pos +  client_size

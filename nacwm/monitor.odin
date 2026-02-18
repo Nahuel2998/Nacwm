@@ -117,8 +117,10 @@ monitor_pop :: proc() -> (changed : bool) {
     if len(monitor.clients) > 0 do changed = true
 
     for client in monitor.clients {
-        client_idx := client_attach(0, client)
-        client_stack_attach(0, client_idx)
+        client := client
+        client.monitor = 0
+        client_idx := client_attach(client)
+        client_stack_attach(client.monitor, client_idx)
     }
 
     if g_monitor_idx >= len(g_monitors) {

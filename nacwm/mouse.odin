@@ -79,8 +79,6 @@ client_mouse_action :: proc($action : Mouse_Action) {
 
     monitor_idx := monitor_idx_from_rect(client.pos, client.size)
     if monitor_idx != g_monitor_idx {
-        old_monitor_idx := g_monitor_idx
-        g_monitor_idx    = monitor_idx
-        client_switch_monitor(g_client_idx, old_monitor_idx, monitor_idx, move=false)
+        client_switch_monitor(g_client_idx, g_monitor_idx, monitor_idx, move=false)
     }
 }

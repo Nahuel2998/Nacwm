@@ -65,7 +65,7 @@ setup_wmhints :: proc() {
     X.DeleteProperty(g_display, g_screen.root, g_atoms.net[.Client_List])
 }
 
-client_update_type :: proc(client : ^Client, monitor_idx : Monitor_Index) {
+client_update_type :: proc(client : ^Client) {
     window := client.window
 
     wintype, ok_wintype := get_property(window, g_atoms.net[.WM_Window_Type], X.XA_ATOM, X.Atom)
@@ -75,7 +75,7 @@ client_update_type :: proc(client : ^Client, monitor_idx : Monitor_Index) {
 
     state, ok_state := get_property(window, g_atoms.net[.WM_State], X.XA_ATOM, X.Atom)
     if ok_state && state == g_atoms.net[.WM_Fullscreen] {
-        client_fullscreen(client, monitor_idx, true)
+        client_fullscreen(client, client.monitor, true)
     }
 }
 
