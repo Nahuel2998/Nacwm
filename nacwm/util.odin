@@ -57,7 +57,8 @@ apply_size_hints :: proc(client : ^Client, pos : ^[2]i32, size : ^[2]i32) -> boo
     return pos^ != client.pos || size^ != client.size
 }
 
-nth_matching_client :: #force_inline proc(
+// TODO: Consider whether this should take Monitor_Index instead
+monitor_nth_matching_client :: #force_inline proc(
     monitor  : Monitor,
     start    : Client_Index,
     delta    : i8,
@@ -70,8 +71,8 @@ nth_matching_client :: #force_inline proc(
     client_idx := start
     for {
         client_idx += incr
-        client_idx %= len(monitor.clients)
-        if client_idx < 0 do client_idx += len(monitor.clients)
+        client_idx %= len(g_clients)
+        if client_idx < 0 do client_idx += len(g_clients)
 
         if matcher(client_idx, monitor) {
             until -= 1

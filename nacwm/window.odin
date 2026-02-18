@@ -66,20 +66,17 @@ monitor_idx_from_window :: proc(window : X.Window, default := g_monitor_idx) -> 
         if monitor.bar.window == window do return monitor_idx
     }
 
-    monitor_idx, client_idx := client_from_window(window)
-    if client_idx != CLIENT_NONE do return monitor_idx
+    client_idx := client_from_window(window)
+    if client_idx != CLIENT_NONE do return g_clients[client_idx].monitor
 
     return default
 }
 
-// TODO: This'll likely just return Client_Index in the future
-client_from_window :: proc(window : X.Window) -> (Monitor_Index, Client_Index) {
-    for monitor, monitor_idx in g_monitors do for client, client_idx in monitor.clients {
-        if client.window == window {
-            return monitor_idx, client_idx
-        }
+client_from_window :: #force_inline proc(window : X.Window) -> Client_Index {
+    for client, client_idx in g_clients {
+        if client.window == window do return client_idx
     }
-    return g_monitor_idx, CLIENT_NONE
+    return CLIENT_NONE
 }
 
 window_state_get :: proc(window : X.Window) -> (X.WMHintState, bool) {

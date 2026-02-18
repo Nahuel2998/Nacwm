@@ -86,7 +86,8 @@ bar_draw :: proc(monitor : Monitor) {
 
     // Tags
     has_clients : Tags
-    for client in monitor.clients {
+    for client in g_clients {
+        if client.monitor != monitor.index do continue
         has_clients |= client.tags
     }
     pos_x := BAR_CENTER

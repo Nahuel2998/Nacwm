@@ -100,7 +100,7 @@ recv_configure_request :: proc(event : X.XEvent) {
 
     mask := transmute(X.WindowChangesMask)cast(i32)event.value_mask
 
-    monitor_idx, client_idx := client_from_window(event.window)
+    client_idx := client_from_window(event.window)
     if client_idx == CLIENT_NONE {
         wc := X.XWindowChanges{
             x = event.x,
@@ -115,8 +115,7 @@ recv_configure_request :: proc(event : X.XEvent) {
         return
     }
 
-    monitor := g_monitors[monitor_idx]
-    client  := &monitor.clients[client_idx]
+    client := &g_clients[client_idx]
     if !client.floating {
         send_configure_notify(client.window, client.pos, client.size, client.border)
         return
@@ -145,7 +144,7 @@ recv_configure_request :: proc(event : X.XEvent) {
     }
     send_configure_notify(client.window, client.pos, client.size, client.border)
 
-    if client_is_visible(client_idx, monitor) {
+    if client_is_visible(client_idx) {
         X.MoveResizeWindow(g_display, client.window, client.pos.x, client.pos.y, cast(u32)client.size.x, cast(u32)client.size.y)
     }
 }
@@ -160,24 +159,25 @@ recv_configure_notify :: proc(event : X.XEvent) {
     if !(setup_monitors() || changed) do return
 
     setup_bars()
+    // Fixup fullscreen windows
+    for &client in g_clients do if client.fullscreen {
+        monitor := g_monitors[client.monitor]
+        _client_resize(&client, monitor.pos, monitor.size)
+    }
+    // Fixup bars
     for &monitor in g_monitors {
-        // Fixup fullscreen windows
-        for &client in monitor.clients do if client.fullscreen {
-            _client_resize(&client, monitor.pos, monitor.size)
-        }
-        // Fixup bars
         X.MoveResizeWindow(g_display, monitor.bar.window, monitor.pos.x, monitor.pos.y, cast(u32)monitor.size.x, cast(u32)STYLE.bar.height)
     }
 
-    client_focus(CLIENT_NONE)
+    monitor_refocus()
     monitor_arrange_all()
 }
 
 recv_destroy_notify :: proc(event : X.XEvent) {
     event := event.xdestroywindow
 
-    monitor_idx, client_idx := client_from_window(event.window)
-    client_unmanage(monitor_idx, client_idx, true)
+    client_idx := client_from_window(event.window)
+    client_unmanage(client_idx, true)
 }
 
 recv_enter_notify :: proc(event : X.XEvent) {
@@ -187,13 +187,15 @@ recv_enter_notify :: proc(event : X.XEvent) {
     // Accept all from root
     if (event.mode != .NotifyNormal || event.detail == .NotifyInferior) && event.window != g_screen.root do return
 
-    monitor_idx, client_idx := client_from_window(event.window)
-    if client_idx == CLIENT_NONE {
-        monitor_idx = monitor_idx_from_window(event.window)
+    client_idx := client_from_window(event.window)
+    if client_idx != CLIENT_NONE {
+        client_focus(client_idx)
+    } else {
+        monitor_idx := monitor_idx_from_window(event.window)
+        monitor_focus(monitor_idx)
     }
 
     // log.debug("Entered monitor/client:", monitor_idx, "/", client_idx)
-    client_focus(client_idx, monitor_idx)
 }
 
 recv_expose :: proc(event : X.XEvent) {
@@ -210,10 +212,10 @@ recv_expose :: proc(event : X.XEvent) {
 recv_focus_in :: proc(event : X.XEvent) {
     event := event.xfocus
 
+    // TODO: why?
     if g_client_idx == CLIENT_NONE do return
 
-    monitor := g_monitors[g_monitor_idx]
-    client  := monitor.clients[g_client_idx]
+    client := g_clients[g_client_idx]
     if client.window != event.window {
         window_take_focus(client.window, !client.no_focus)
     }
@@ -235,7 +237,7 @@ recv_map_request :: proc(event : X.XEvent) {
     ok := bool(X.GetWindowAttributes(g_display, event.window, &attrs))
     if !ok || attrs.override_redirect do return
 
-    _, client_idx := client_from_window(event.window)
+    client_idx := client_from_window(event.window)
     if client_idx != CLIENT_NONE do return
 
     trans_for : X.Window
@@ -245,15 +247,10 @@ recv_map_request :: proc(event : X.XEvent) {
 
 recv_motion_notify :: proc(event : X.XEvent) {
     event := event.xmotion
-
     if event.window != g_screen.root do return
 
     monitor_idx := monitor_idx_from_rect({event.x_root, event.y_root}, {1, 1})
-    if monitor_idx != g_monitor_idx {
-        client_unfocus(true)
-        g_monitor_idx = monitor_idx
-        client_focus(CLIENT_NONE)
-    }
+    monitor_focus(monitor_idx)
 }
 
 recv_property_notify :: proc(event : X.XEvent) {
@@ -265,10 +262,10 @@ recv_property_notify :: proc(event : X.XEvent) {
     }
     if event.state == .PropertyDelete do return
 
-    monitor_idx, client_idx := client_from_window(event.window)
+    client_idx := client_from_window(event.window)
     if client_idx == CLIENT_NONE do return
 
-    client := &g_monitors[monitor_idx].clients[client_idx]
+    client := &g_clients[client_idx]
     switch event.atom {
     case X.XA_WM_TRANSIENT_FOR:
         if !client.floating do return
@@ -277,11 +274,11 @@ recv_property_notify :: proc(event : X.XEvent) {
         ok := bool(X.GetTransientForHint(g_display, event.window, &trans_for))
         if !ok do return
 
-        _, managed_idx := client_from_window(trans_for)
+        managed_idx := client_from_window(trans_for)
         if managed_idx == CLIENT_NONE do return
 
         client.floating = true
-        monitor_arrange(monitor_idx)
+        monitor_arrange(client.monitor)
 
     case X.XA_WM_NORMAL_HINTS:
         client.hints.valid = false
@@ -300,13 +297,13 @@ recv_property_notify :: proc(event : X.XEvent) {
 recv_unmap_notify :: proc(event : X.XEvent) {
     event := event.xunmap
 
-    monitor_idx, client_idx := client_from_window(event.window)
+    client_idx := client_from_window(event.window)
     if client_idx == CLIENT_NONE do return
 
     if event.send_event {
         window_state_set(event.window, .WithdrawnState)
     } else {
-        client_unmanage(monitor_idx, client_idx, false)
+        client_unmanage(client_idx, false)
     }
 }
 
@@ -314,10 +311,12 @@ recv_button_press :: proc(event : X.XEvent) {
     event := event.xbutton
 
     click : Click_Kind
-    monitor_idx, client_idx := client_from_window(event.window)
-    if monitor_idx != g_monitor_idx \
-    || (client_idx != CLIENT_NONE && client_idx != g_client_idx) {
-        client_focus(client_idx, monitor_idx)
+    client_idx := client_from_window(event.window)
+    if client_idx != CLIENT_NONE {
+        client_focus(client_idx)
+    } else {
+        monitor_idx := monitor_idx_from_window(event.window)
+        monitor_focus(monitor_idx)
     }
 
     if client_idx != CLIENT_NONE {
@@ -337,7 +336,7 @@ recv_button_press :: proc(event : X.XEvent) {
 recv_client_message :: proc(event : X.XEvent) {
     event := event.xclient
 
-    monitor_idx, client_idx := client_from_window(event.window)
+    client_idx := client_from_window(event.window)
     if client_idx == CLIENT_NONE do return
 
     if event.message_type == g_atoms.net[.WM_State] {
@@ -347,7 +346,7 @@ recv_client_message :: proc(event : X.XEvent) {
 
         FULLSCREEN_ADD    :: 1
         FULLSCREEN_TOGGLE :: 2
-        client := &g_monitors[monitor_idx].clients[client_idx]
+        client := &g_clients[client_idx]
 
         on : bool
         switch event.data.l[0] {
@@ -356,7 +355,7 @@ recv_client_message :: proc(event : X.XEvent) {
         case FULLSCREEN_TOGGLE:
             on = !client.fullscreen
         }
-        client_fullscreen(client, monitor_idx, on)
+        client_fullscreen(client, client.monitor, on)
     }
 
     // TODO: handle urgency

@@ -41,34 +41,33 @@ Client :: struct {
         border : i32,
     },
 }
+g_clients : [dynamic]Client
 
 // Currently selected client, index into g_monitors[g_monitor_idx].clients
 g_client_idx := CLIENT_NONE
 
 client_attach :: proc(client : Client) -> Client_Index {
-    append(&g_monitors[client.monitor].clients, client)
-    return len(g_monitors[client.monitor].clients) - 1
+    append(&g_clients, client)
+    return len(g_clients) - 1
 }
 
-client_detach :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
+client_detach :: proc(client_idx : Client_Index) {
     if client_idx == CLIENT_NONE do return
 
-    monitor := &g_monitors[monitor_idx]
-    unordered_remove(&monitor.clients, client_idx)
+    unordered_remove(&g_clients, client_idx)
     // unordered_remove swaps last element for the one we just deleted
     // If we removed the last one we're fine
-    if client_idx == len(monitor.clients) do return
+    if client_idx == len(g_clients) do return
 
     // Otherwise, fixup the indices
-    #reverse for &idx in monitor.stack {
-        if idx != len(monitor.clients) do continue
+    client := g_clients[client_idx]
+    #reverse for &idx in g_monitors[client.monitor].stack {
+        if idx != len(g_clients) do continue
         idx = client_idx
         break
     }
 
-    // TODO: This check can begone when g_clients is used
-    if g_monitor_idx != monitor_idx do return
-    if g_client_idx == len(monitor.clients) {
+    if g_client_idx == len(g_clients) {
         g_client_idx = client_idx
     }
 }
@@ -88,60 +87,41 @@ client_stack_detach :: proc(monitor_idx : Monitor_Index, client_idx : Client_Ind
         ordered_remove(&monitor.stack, i)
         break
     }
-
-    // TODO: This check can begone when g_clients is used
-    if g_monitor_idx != monitor_idx do return
-    if g_client_idx == client_idx {
-        g_client_idx = monitor_first_visible_client(monitor^)
-    }
 }
 
-client_swap :: proc(from_idx, to_idx : Client_Index, monitor_idx : Monitor_Index) {
+client_swap :: proc(from_idx, to_idx : Client_Index) {
     if from_idx == to_idx do return
 
-    monitor := &g_monitors[monitor_idx]
+    client := g_clients[from_idx]
+    g_clients[from_idx] = g_clients[to_idx]
+    g_clients[to_idx]   = client
 
-    client := monitor.clients[from_idx]
-    monitor.clients[from_idx] = monitor.clients[to_idx]
-    monitor.clients[to_idx]   = client
-
-    if g_monitor_idx == monitor_idx {
-        if      g_client_idx == from_idx do g_client_idx = to_idx
-        else if g_client_idx ==   to_idx do g_client_idx = from_idx
-    }
-    #reverse for &client_idx in monitor.stack {
-        if        client_idx == from_idx do   client_idx = to_idx
-        else if   client_idx ==   to_idx do   client_idx = from_idx
+    if      g_client_idx == from_idx do g_client_idx =   to_idx
+    else if g_client_idx ==   to_idx do g_client_idx = from_idx
+    #reverse for &client_idx in g_monitors[client.monitor].stack {
+        if      client_idx == from_idx do client_idx =   to_idx
+        else if client_idx ==   to_idx do client_idx = from_idx
     }
 
-    monitor_arrange(monitor_idx)
+    monitor_arrange(client.monitor)
 }
 
-// TODO: Rather than focus/unfocus I'd like it to be focus_switch
-// A call with CLIENT_NONE will focus the next visible one
-client_focus :: proc(client_idx : Client_Index, monitor_idx := g_monitor_idx) {
-    monitor := g_monitors[monitor_idx]
+// Switches focus to client_idx
+// A call with CLIENT_NONE will reset focus
+client_focus :: proc(client_idx : Client_Index) {
+    if client_idx == g_client_idx do return
 
-    client_idx := client_idx
-    if client_idx == CLIENT_NONE || !client_is_visible(client_idx, monitor) {
-        client_idx = monitor_first_visible_client(monitor)
-    }
-
-    if g_monitor_idx != monitor_idx || g_client_idx != client_idx {
-        client_unfocus(false)
-        g_monitor_idx = monitor_idx
-    }
-
+    client_unfocus()
     if client_idx == CLIENT_NONE {
         focus_reset()
-        g_client_idx = CLIENT_NONE
         return
     }
-    client := monitor.clients[client_idx]
+    client := g_clients[client_idx]
 
-    client_stack_detach(monitor_idx, client_idx)
-    client_stack_attach(monitor_idx, client_idx)
-    g_client_idx = client_idx
+    client_stack_detach(client.monitor, client_idx)
+    client_stack_attach(client.monitor, client_idx)
+    g_monitor_idx = client.monitor
+    g_client_idx  = client_idx
 
     grab_buttons(client.window, true)
     X.SetWindowBorder(g_display, client.window, g_scheme[.Selected].border);
@@ -150,24 +130,21 @@ client_focus :: proc(client_idx : Client_Index, monitor_idx := g_monitor_idx) {
     // TODO: Bar title (on all paths)
 }
 
-client_unfocus :: proc($set_focus : bool) {
+client_unfocus :: proc() {
     if g_client_idx == CLIENT_NONE do return
 
-    client := g_monitors[g_monitor_idx].clients[g_client_idx]
+    client := g_clients[g_client_idx]
     grab_buttons(client.window, false)
     X.SetWindowBorder(g_display, client.window, g_scheme[.Normal].border);
-
-    when set_focus do focus_reset()
 
     g_client_idx = CLIENT_NONE
 }
 
 // Floats or tiles a client
-client_float :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
+client_float :: proc(client_idx : Client_Index) {
     if client_idx == CLIENT_NONE do return
 
-    monitor := &g_monitors[monitor_idx]
-    client  := &monitor.clients[client_idx]
+    client := &g_clients[client_idx]
     if client.fullscreen || client_is_fixed(client^) do return
 
     client.floating = !client.floating
@@ -175,7 +152,7 @@ client_float :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
         client_resize(client, client.pos, client.size)
     }
     client_restack(client^)
-    monitor_arrange(monitor_idx)
+    monitor_arrange(client.monitor)
 }
 
 // Do what I mean
@@ -233,10 +210,10 @@ client_fullscreen_exit :: proc(client : ^Client, monitor_idx : Monitor_Index) {
     monitor_arrange(monitor_idx)
 }
 
-client_kill :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index, kindly := true) {
+client_kill :: proc(client_idx : Client_Index, kindly := true) {
     if client_idx == CLIENT_NONE do return
 
-    window := g_monitors[monitor_idx].clients[client_idx].window
+    window := g_clients[client_idx].window
     ok := kindly && send_message(window, .Delete)
     if ok do return
 
@@ -251,37 +228,31 @@ client_kill :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index, kind
     X.UngrabServer(g_display)
 }
 
-client_switch_monitor :: proc(client_idx : Client_Index, old_monitor_idx, new_monitor_idx : Monitor_Index, $move : bool) {
-    if client_idx      == CLIENT_NONE \
-    || old_monitor_idx == new_monitor_idx { return }
+// FIXME: Client doesn't always go to the master area
+client_switch_monitor :: proc(client_idx : Client_Index, new_monitor_idx : Monitor_Index, $move : bool, $follow : bool) {
+    if client_idx == CLIENT_NONE do return
 
-    old_monitor := &g_monitors[old_monitor_idx]
-    client      := old_monitor.clients[client_idx]
+    client := &g_clients[client_idx]
+    if client.monitor == new_monitor_idx do return
 
-    if g_monitor_idx == old_monitor_idx {
-        client_unfocus(true)
-        g_monitor_idx = new_monitor_idx
-    }
-
-    client_stack_detach(old_monitor_idx, client_idx)
-    client_detach(      old_monitor_idx, client_idx)
+    client_stack_detach(client.monitor,  client_idx)
+    client_stack_attach(new_monitor_idx, client_idx)
 
     new_monitor := g_monitors[new_monitor_idx]
     client.tags  = new_monitor.tags
     when move {
         if client.floating {
+            old_monitor := g_monitors[client.monitor]
             offset := new_monitor.pos - old_monitor.pos
             client.pos += offset
         }
     }
     client.monitor = new_monitor_idx
 
-    new_client_idx := client_attach(client)
-    client_stack_attach(client.monitor, new_client_idx)
-
-    if g_monitor_idx == new_monitor_idx {
-        client_focus(CLIENT_NONE)
-    } 
+    if client_idx == g_client_idx {
+        when follow do g_monitor_idx = client.monitor
+        else        do monitor_refocus()
+    }
     monitor_arrange_all()
 }
 
@@ -327,11 +298,12 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
     client_update_name(&client)
 
     if transient_for != X.None {
-        new_monitor_idx, client_idx := client_from_window(transient_for)
+        client_idx := client_from_window(transient_for)
         if client_idx != CLIENT_NONE {
+            parent := g_clients[client_idx]
             // Inherit tags and monitor
-            client.tags    = g_monitors[new_monitor_idx].clients[client_idx].tags
-            client.monitor = new_monitor_idx
+            client.tags    = parent.tags
+            client.monitor = parent.monitor
         }
     }
     if client.monitor == MONITOR_NONE {
@@ -366,18 +338,20 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
 
     monitor_arrange(client.monitor)
     X.MapWindow(g_display, client.window)
-    client_focus(CLIENT_NONE)
+    if client.monitor == g_monitor_idx {
+        monitor_refocus()
+    }
 }
 
-client_unmanage :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index, $destroyed : bool) {
+// TODO: Fix it dies here
+client_unmanage :: proc(client_idx : Client_Index, $destroyed : bool) {
     if client_idx == CLIENT_NONE do return
 
-    monitor := &g_monitors[monitor_idx]
-    client  := monitor.clients[client_idx]
+    client := g_clients[client_idx]
 
     delete(client.name)
-    client_stack_detach(monitor_idx, client_idx)
-    client_detach(      monitor_idx, client_idx)
+    client_stack_detach(client.monitor, client_idx)
+    client_detach(client_idx)
 
     when !destroyed {
         X.GrabServer(g_display)
@@ -395,9 +369,12 @@ client_unmanage :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index, 
         X.UngrabServer(g_display)
     }
 
-    client_focus(CLIENT_NONE)
+    if client_idx == g_client_idx {
+        g_client_idx = CLIENT_NONE
+        monitor_refocus()
+    }
     update_client_list()
-    monitor_arrange(monitor_idx)
+    monitor_arrange(client.monitor)
 }
 
 // -- Utils
@@ -418,9 +395,17 @@ client_ensure_onscreen :: proc(client : ^Client) {
     client.pos.y = max(client.pos.y, monitor.pos.y)
 }
 
-client_is_visible :: #force_inline proc(client_idx : Client_Index, monitor : Monitor) -> bool {
-    assert(client_idx >= 0)
-    client := monitor.clients[client_idx]
+client_is_visible :: #force_inline proc(client_idx : Client_Index) -> bool {
+    assert(client_idx != CLIENT_NONE)
+    client := g_clients[client_idx]
+    return card(client.tags & g_monitors[client.monitor].tags) > 0
+}
+
+// TODO: Consider whether monitor should be passed here
+client_is_visible_in_monitor :: #force_inline proc(client_idx : Client_Index, monitor : Monitor) -> bool {
+    assert(client_idx != CLIENT_NONE)
+    client := g_clients[client_idx]
+    if client.monitor != monitor.index do return false
     return card(client.tags & monitor.tags) > 0
 }
 

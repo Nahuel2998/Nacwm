@@ -131,11 +131,7 @@ client_update_name :: proc(client : ^Client) {
 
 // TODO: Consider keeping track of this somewhere
 update_client_list :: proc() {
-    num_clients : int
-    for monitor in g_monitors {
-        num_clients += len(monitor.clients)
-    }
-
+    num_clients := cast(i32)len(g_clients)
     if num_clients == 0 {
         X.DeleteProperty(g_display, g_screen.root, g_atoms.net[.Client_List])
         return
@@ -145,11 +141,11 @@ update_client_list :: proc() {
     defer free_all(context.temp_allocator)
 
     i : int
-    for monitor in g_monitors do for client in monitor.clients {
+    for client in g_clients {
         clients[i] = client.window
         i += 1
     }
-    X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.Client_List], X.XA_WINDOW, 32, X.PropModeReplace, raw_data(clients), cast(i32)num_clients)
+    X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.Client_List], X.XA_WINDOW, 32, X.PropModeReplace, raw_data(clients), num_clients)
 }
 
 // -- Utils

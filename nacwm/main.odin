@@ -90,8 +90,8 @@ setup :: proc() {
 
 setdown :: proc() {
     do_action(~View{})
-    for monitor, monitor_idx in g_monitors do for client_idx in 0..<len(monitor.clients) {
-        client_unmanage(monitor_idx, client_idx, false)
+    for client_idx in 0..<len(g_clients) {
+        client_unmanage(client_idx, false)
     }
 
     X.UngrabKey(g_display, X.AnyKey, {.AnyModifier}, g_screen.root)

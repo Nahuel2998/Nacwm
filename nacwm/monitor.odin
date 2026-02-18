@@ -9,11 +9,12 @@ MONITOR_NONE :: Monitor_Index(-1)
 
 Monitor_Index :: int
 Monitor :: struct {
+    index : Monitor_Index,
+
     pos  : [2]i32,
     size : [2]i32,
 
-    clients : [dynamic]Client,
-    stack   : [dynamic]Client_Index,
+    stack : [dynamic]Client_Index,
 
     master_factor : f32,
     tags : Tags,
@@ -29,7 +30,9 @@ setup_monitors :: proc() -> (changed : bool) {
     if xinerama.IsActive(g_display) do changed = setup_monitors_xinerama()
     else                            do changed = setup_monitors_default()
 
-    if changed do g_monitor_idx = monitor_idx_from_window(g_screen.root, default=0)
+    if changed {
+        g_monitor_idx = monitor_idx_from_window(g_screen.root, default=Monitor_Index(0))
+    }
     return
 }
 
@@ -94,8 +97,8 @@ monitor_update :: #force_inline proc(monitor : ^Monitor, geom : xinerama.ScreenI
 
 monitor_new :: proc() {
     monitor := Monitor{
-        tags = {1},
-
+        index = len(g_monitors),
+        tags  = {1},
         master_factor = MASTER_FACTOR,
     }
     append(&g_monitors, monitor)
@@ -106,7 +109,6 @@ monitor_delete :: proc(monitor : Monitor) {
     if monitor.bar.window != X.None {
         bar_delete(monitor.bar)
     }
-    delete(monitor.clients)
 }
 
 // Remove last monitor and reattach its windows
@@ -114,17 +116,18 @@ monitor_pop :: proc() -> (changed : bool) {
     monitor := pop(&g_monitors)
     assert(len(g_monitors) > 0)
 
-    if len(monitor.clients) > 0 do changed = true
-
-    for client in monitor.clients {
+    for client in g_clients {
+        if client.monitor != len(g_monitors) do continue
         client := client
-        client.monitor = 0
+        changed = true
+
+        client.monitor = Monitor_Index(0)
         client_idx := client_attach(client)
         client_stack_attach(client.monitor, client_idx)
     }
 
     if g_monitor_idx >= len(g_monitors) {
-        g_monitor_idx = 0
+        g_monitor_idx = Monitor_Index(0)
     }
 
     monitor_delete(monitor)
@@ -134,8 +137,8 @@ monitor_pop :: proc() -> (changed : bool) {
 monitor_show_hide :: proc(monitor : Monitor) {
     // Show clients top -> down
     #reverse for client_idx in monitor.stack {
-        if !client_is_visible(client_idx, monitor) do continue
-        client := &monitor.clients[client_idx]
+        if !client_is_visible_in_monitor(client_idx, monitor) do continue
+        client := &g_clients[client_idx]
 
         X.MoveWindow(g_display, client.window, client.pos.x, client.pos.y)
 
@@ -146,8 +149,8 @@ monitor_show_hide :: proc(monitor : Monitor) {
 
     // Hide clients down -> top
     for client_idx in monitor.stack {
-        if client_is_visible(client_idx, monitor) do continue
-        client := monitor.clients[client_idx]
+        if client_is_visible_in_monitor(client_idx, monitor) do continue
+        client := g_clients[client_idx]
 
         client_size := client_size_real(client)
         X.MoveWindow(g_display, client.window, client_size.x * -2, client.pos.y)
@@ -171,6 +174,23 @@ monitor_arrange_all :: proc() {
     }
 }
 
+// Switch focus to another monitor
+monitor_focus :: proc(monitor_idx : Monitor_Index) {
+    if monitor_idx == g_monitor_idx do return
+
+    g_monitor_idx = monitor_idx
+    monitor_refocus()
+}
+
+// Refocus the currently focused monitor
+monitor_refocus :: proc() {
+    monitor    := g_monitors[g_monitor_idx]
+    client_idx := monitor_first_visible_client(monitor)
+    if client_idx == g_client_idx do return
+
+    client_focus(client_idx)
+}
+
 // -- Utils
 monitor_idx_from_rect :: proc(pos : [2]i32, size : [2]i32, default := g_monitor_idx) -> Monitor_Index {
     area : i32
@@ -188,7 +208,7 @@ monitor_idx_from_rect :: proc(pos : [2]i32, size : [2]i32, default := g_monitor_
 
 monitor_first_visible_client :: #force_inline proc(monitor : Monitor) -> Client_Index {
     #reverse for client_idx in monitor.stack {
-        if client_is_visible(client_idx, monitor) do return client_idx
+        if client_is_visible_in_monitor(client_idx, monitor) do return client_idx
     }
     return CLIENT_NONE
 }
