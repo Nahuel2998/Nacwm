@@ -85,6 +85,12 @@ setup :: proc() {
     setup_events()
     setup_keys()
 
+    // Warp pointer to center of main monitor
+    assert(len(g_monitors) > 0)
+    monitor := g_monitors[0]
+    pos     := monitor.pos + monitor.size / 2
+    X.WarpPointer(g_display, X.None, g_screen.root, 0, 0, 0, 0, pos.x, pos.y)
+
     focus_reset()
 }
 
