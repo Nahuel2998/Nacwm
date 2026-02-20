@@ -344,7 +344,6 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
     }
 }
 
-// TODO: Fix it dies here
 client_unmanage :: proc(client_idx : Client_Index, $destroyed : bool) {
     if client_idx == CLIENT_NONE do return
 
