@@ -41,6 +41,7 @@ main :: proc() {
     run()
 
     if g_restart {
+        clients_save()
         argv := make([]cstring, len(os.args) + 1)
         for arg, i in os.args {
             argv[i] = strings.clone_to_cstring(arg)

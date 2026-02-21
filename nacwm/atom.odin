@@ -1,6 +1,7 @@
 package nacwm
 
 import "core:fmt"
+import "core:log"
 import "core:strings"
 import X "../vendor/x11/xlib"
 
@@ -23,9 +24,13 @@ X_Net_Atom :: enum {
     WM_Window_Type_Dialog,
     Client_List,
 }
+Nacwm_Atom :: enum {
+    Window_Data,
+}
 g_atoms : struct {
-    wm  : [X_WM_Atom]X.Atom,
-    net : [X_Net_Atom]X.Atom,
+    wm    : [X_WM_Atom]X.Atom,
+    net   : [X_Net_Atom]X.Atom,
+    nacwm : [Nacwm_Atom]X.Atom,
 }
 
 g_wmcheckwin : X.Window
@@ -49,6 +54,9 @@ setup_atoms :: proc() {
             .WM_Window_Type        = X.InternAtom(g_display, "_NET_WM_WINDOW_TYPE",        false),
             .WM_Window_Type_Dialog = X.InternAtom(g_display, "_NET_WM_WINDOW_TYPE_DIALOG", false),
         },
+        nacwm = {
+            .Window_Data = X.InternAtom(g_display, "_NACWM_WINDOW_DATA", false),
+        },
     }
 }
 
@@ -68,12 +76,12 @@ setup_wmhints :: proc() {
 client_update_type :: proc(client : ^Client) {
     window := client.window
 
-    wintype, ok_wintype := get_property(window, g_atoms.net[.WM_Window_Type], X.XA_ATOM, X.Atom)
+    wintype, ok_wintype := get_property(window, g_atoms.net[.WM_Window_Type], X.XA_ATOM, X.Atom, 1, false)
     if ok_wintype && wintype == g_atoms.net[.WM_Window_Type_Dialog] {
         client.floating = true
     }
 
-    state, ok_state := get_property(window, g_atoms.net[.WM_State], X.XA_ATOM, X.Atom)
+    state, ok_state := get_property(window, g_atoms.net[.WM_State], X.XA_ATOM, X.Atom, 1, false)
     if ok_state && state == g_atoms.net[.WM_Fullscreen] {
         client_fullscreen(client, client.monitor, true)
     }
@@ -148,21 +156,66 @@ update_client_list :: proc() {
     X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.Client_List], X.XA_WINDOW, 32, X.PropModeReplace, raw_data(clients), num_clients)
 }
 
-// -- Utils
-get_property :: proc(window : X.Window, prop : X.Atom, x_type : X.Atom, $type : typeid) -> (type, bool) {
-    _a : X.Atom
-    _i : i32
-    _ul, num_items : uint
-    data : rawptr
+clients_save :: proc() {
+    window_data := make([]Restart_Window_Data, len(g_clients), context.temp_allocator)
+    for client, i in g_clients {
+        window_data[i] = {
+            client.window,
+            {
+                monitor  = client.monitor,
+                tags     = transmute(u16)client.tags,
+                floating = client.floating,
+            },
+        }
+    }
+    count := ( size_of(Restart_Window_Data) / size_of(uint) ) * len(window_data)
+    X.ChangeProperty(g_display, g_screen.root, g_atoms.nacwm[.Window_Data], g_atoms.nacwm[.Window_Data], 32, X.PropModeReplace, raw_data(window_data), cast(i32)count)
+    X.Flush(g_display)
+    free_all(context.temp_allocator)
+}
 
-    status := X.GetWindowProperty(g_display, window, prop, 0, size_of(type)/size_of(i32), false, x_type, &_a, &_i, &num_items, &_ul, &data)
-    if status != 0 || data == nil do return {}, false
+@(require_results)
+clients_load :: proc(allocator := context.allocator) -> ([]Restart_Window_Data, bool) {
+    data, num_items, ok := get_property_data(g_screen.root, g_atoms.nacwm[.Window_Data], g_atoms.nacwm[.Window_Data], 512 * 2, true) // Get up to 512 clients because why more
+    if !ok do return nil, false
+    defer X.Free(data)
+
+    if num_items == 0 do return nil, false
+
+    num_window_data := num_items / (size_of(Restart_Window_Data) / size_of(uint))
+    raw_window_data := cast([^]Restart_Window_Data)data
+
+    res := make([]Restart_Window_Data, num_window_data, allocator)
+    for &window_data, i in res {
+        window_data = raw_window_data[i]
+    }
+    return res, true
+}
+
+// -- Utils
+get_property :: proc(window : X.Window, prop : X.Atom, x_type : X.Atom, $type : typeid, $length : int, $delete : b32) -> (type, bool) {
+    data, num_items, ok := get_property_data(window, prop, x_type, length, delete)
+    if !ok do return {}, false
     defer X.Free(data)
 
     if num_items == 0 do return {}, true
 
     res := cast(^type)data
     return res^, true
+}
+
+get_property_data :: proc(window : X.Window, prop : X.Atom, x_type : X.Atom, $length : int, $delete : b32) -> (rawptr, uint, bool) {
+    _a : X.Atom
+    _i : i32
+    bytes_after, num_items : uint
+    data : rawptr
+
+    status := X.GetWindowProperty(g_display, window, prop, 0, length, delete, x_type, &_a, &_i, &num_items, &bytes_after, &data)
+    if bytes_after > 0 do log.warn("Read of property", prop, "with length", length, "resulted in", bytes_after, "bytes_after")
+
+    if status != 0 || data == nil do return data, 0, false
+
+    return data, num_items, true
 }
 
 get_text_property :: proc(window : X.Window, atom : X.Atom) -> (string, bool) {

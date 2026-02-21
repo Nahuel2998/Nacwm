@@ -2,6 +2,16 @@ package nacwm
 
 import X "../vendor/x11/xlib"
 
+Restart_Window_Data :: struct {
+    window   : X.Window, // Probably 32bits too large, but just in case
+    data     : bit_field u32 {
+        monitor  : Monitor_Index  | 8,
+        tags     : u16 /* Tags */ | 16,
+        floating : bool           | 1,
+    },
+}
+#assert(size_of(Restart_Window_Data) == size_of([2]uint))
+
 scan_windows :: proc() {
     _w : X.Window
     windows : [^]X.Window
@@ -23,6 +33,8 @@ scan_windows :: proc() {
     transients := make([]Transient_Window, num_windows, allocator=context.temp_allocator)
     defer free_all(context.temp_allocator)
 
+    window_datas, _ := clients_load(context.temp_allocator)
+
     attrs : X.XWindowAttributes
     for window in windows[:num_windows] {
         ok_attrs := bool(X.GetWindowAttributes(g_display, window, &attrs))
@@ -37,12 +49,16 @@ scan_windows :: proc() {
                 transients[num_trans].attrs  = attrs
                 num_trans += 1
             }
-            else do window_manage(window, attrs)
+            else {
+                window_data := window_data_find(window, window_datas)
+                window_manage(window, attrs, restore=window_data)
+            }
         }
     }
 
     for trans in transients[:num_trans] {
-        window_manage(trans.window, trans.attrs, trans.trans_for)
+        window_data := window_data_find(trans.window, window_datas)
+        window_manage(trans.window, trans.attrs, trans.trans_for, restore=window_data)
     }
 }
 
@@ -80,7 +96,7 @@ client_from_window :: #force_inline proc(window : X.Window) -> Client_Index {
 }
 
 window_state_get :: proc(window : X.Window) -> (X.WMHintState, bool) {
-    res, ok := get_property(window, g_atoms.wm[.State], g_atoms.wm[.State], i64)
+    res, ok := get_property(window, g_atoms.wm[.State], g_atoms.wm[.State], i32, 2, false)
     if ok do return cast(X.WMHintState)res, true
     return {}, false
 }
@@ -88,4 +104,13 @@ window_state_get :: proc(window : X.Window) -> (X.WMHintState, bool) {
 window_state_set :: proc(window : X.Window, state : X.WMHintState) {
     data := [2]int{ cast(int)state, X.None }
     X.ChangeProperty(g_display, window, g_atoms.wm[.State], g_atoms.wm[.State], 32, X.PropModeReplace, &data, 2)
+}
+
+window_data_find :: #force_inline proc(window : X.Window, window_datas : []Restart_Window_Data) -> (Restart_Window_Data, bool) #optional_ok {
+    if window_datas == nil do return {}, false
+
+    for window_data in window_datas {
+        if window_data.window == window do return window_data, true
+    }
+    return {}, false
 }

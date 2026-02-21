@@ -282,7 +282,7 @@ _client_resize :: proc(client : ^Client, pos : [2]i32, size : [2]i32) {
     X.Sync(g_display, false)
 }
 
-window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_for : X.Window = X.None) {
+window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_for : X.Window = X.None, restore := Restart_Window_Data{}) {
     client := Client{}
 
     client.monitor = MONITOR_NONE
@@ -298,7 +298,12 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
 
     client_update_name(&client)
 
-    if transient_for != X.None {
+    if restore.window == client.window {
+        client.tags     = transmute(Tags)restore.data.tags
+        client.monitor  = restore.data.monitor
+        client.floating = restore.data.floating
+    }
+    else if transient_for != X.None {
         client_idx := client_from_window(transient_for)
         if client_idx != CLIENT_NONE {
             parent := g_clients[client_idx]
