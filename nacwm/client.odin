@@ -163,7 +163,16 @@ client_restack :: #force_inline proc(client : Client) {
 // Raise a floating window above others
 client_raise :: #force_inline proc(client : Client) {
     if !client.floating do return
-    X.RaiseWindow(g_display, client.window)
+
+    if g_notification_window != X.None {
+        config := X.XWindowChanges{
+            stack_mode = .Below,
+            sibling    = g_notification_window,
+        }
+        X.ConfigureWindow(g_display, client.window, {.CWSibling, .CWStackMode}, &config)
+    } else {
+        X.RaiseWindow(g_display, client.window)
+    }
 }
 // Bury a tiled window below the bar
 client_bury :: #force_inline proc(client : Client) {
@@ -196,7 +205,7 @@ client_fullscreen_enter :: proc(client : ^Client, monitor_idx : Monitor_Index) {
 
     monitor := g_monitors[monitor_idx]
     _client_resize(client, monitor.pos, monitor.size)
-    X.RaiseWindow(g_display, client.window)
+    client_raise(client^)
 }
 client_fullscreen_exit :: proc(client : ^Client, monitor_idx : Monitor_Index) {
     if !client.fullscreen do return

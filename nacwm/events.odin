@@ -10,13 +10,14 @@ g_handlers := #partial [X.EventType]proc(X.XEvent) {
     .ConfigureNotify  = recv_configure_notify,
     .DestroyNotify    = recv_destroy_notify,
     .EnterNotify      = recv_enter_notify,
-    .Expose           = recv_expose,
     .FocusIn          = recv_focus_in,
+    .Expose           = recv_expose,
     .KeyPress         = recv_key_press,
-    .MappingNotify    = recv_mapping_notify,
-    .MapRequest       = recv_map_request,
     .MotionNotify     = recv_motion_notify,
     .PropertyNotify   = recv_property_notify,
+    .MappingNotify    = recv_mapping_notify,
+    .MapRequest       = recv_map_request,
+    .MapNotify        = recv_map_notify,
     .UnmapNotify      = recv_unmap_notify,
 }
 
@@ -230,6 +231,18 @@ recv_mapping_notify :: proc(event : X.XEvent) {
     }
 }
 
+recv_map_notify :: proc(event : X.XEvent) {
+    event := event.xmap
+
+    hints : X.XClassHint
+    X.GetClassHint(g_display, event.window, &hints)
+    if hints.res_class == NOTIFICATION_CLASS {
+        g_notification_window = event.window
+    }
+    if hints.res_class != nil do X.Free(cast(rawptr)hints.res_class)
+    if hints.res_name  != nil do X.Free(cast(rawptr)hints.res_name)
+}
+
 recv_map_request :: proc(event : X.XEvent) {
     event := event.xmaprequest
 
@@ -296,6 +309,10 @@ recv_property_notify :: proc(event : X.XEvent) {
 
 recv_unmap_notify :: proc(event : X.XEvent) {
     event := event.xunmap
+
+    if event.window == g_notification_window {
+        g_notification_window = X.None
+    }
 
     client_idx := client_from_window(event.window)
     if client_idx == CLIENT_NONE do return

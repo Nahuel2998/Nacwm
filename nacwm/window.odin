@@ -2,6 +2,8 @@ package nacwm
 
 import X "../vendor/x11/xlib"
 
+g_notification_window : X.Window
+
 scan_windows :: proc() {
     _w : X.Window
     windows : [^]X.Window

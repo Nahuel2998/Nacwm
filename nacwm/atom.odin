@@ -177,7 +177,7 @@ get_property_data :: proc(window : X.Window, prop : X.Atom, x_type : X.Atom, $le
     data : rawptr
 
     status := X.GetWindowProperty(g_display, window, prop, 0, length, delete, x_type, &_a, &_i, &num_items, &bytes_after, &data)
-    if bytes_after > 0 do log.warn("Read of property", prop, "with length", length, "resulted in", bytes_after, "bytes_after")
+    if bytes_after > 0 do log.warn("Read of property", prop, "with length", length, "resulted in", bytes_after, "bytes_after for window", window)
 
     if status != 0 || data == nil do return data, 0, false
 
