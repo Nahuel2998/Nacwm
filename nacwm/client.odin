@@ -26,9 +26,12 @@ Client :: struct {
     fullscreen : bool,
 
     tags : Tags,
+}
+g_clients : [dynamic]Client
 
+// Extra data for Clients that isn't commonly accessed
+Client_Extra :: struct {
     // Stuff to restore after fullscreen
-    // TODO: Maybe this could be in another array since it's very uncommon
     old_state : struct {
         floating : bool,
         pos      : [2]i32,
@@ -41,7 +44,7 @@ Client :: struct {
         border : i32,
     },
 }
-g_clients : [dynamic]Client
+g_clients_extra : map[X.Window]Client_Extra
 
 // Currently selected client, index into g_monitors[g_monitor_idx].clients
 g_client_idx := CLIENT_NONE
@@ -54,6 +57,7 @@ client_attach :: proc(client : Client) -> Client_Index {
 client_detach :: proc(client_idx : Client_Index) {
     if client_idx == CLIENT_NONE do return
 
+    delete_key(&g_clients_extra, g_clients[client_idx].window)
     unordered_remove(&g_clients, client_idx)
     // unordered_remove swaps last element for the one we just deleted
     // If we removed the last one we're fine
@@ -192,16 +196,19 @@ client_fullscreen :: proc(client : ^Client, monitor_idx : Monitor_Index, on : bo
 client_fullscreen_enter :: proc(client : ^Client, monitor_idx : Monitor_Index) {
     if client.fullscreen do return
 
-    X.ChangeProperty(g_display, client.window, g_atoms.net[.WM_State], X.XA_ATOM, 32, X.PropModeReplace, &g_atoms.net[.WM_Fullscreen], 1)
-    client.old_state = {
+    client_extra := g_clients_extra[client.window]
+    client_extra.old_state = {
         floating = client.floating,
         pos      = client.pos,
         size     = client.size,
         border   = client.border,
     }
+    g_clients_extra[client.window] = client_extra
+
     client.border     = 0
     client.floating   = true
     client.fullscreen = true
+    X.ChangeProperty(g_display, client.window, g_atoms.net[.WM_State], X.XA_ATOM, 32, X.PropModeReplace, &g_atoms.net[.WM_Fullscreen], 1)
 
     monitor := g_monitors[monitor_idx]
     _client_resize(client, monitor.pos, monitor.size)
@@ -210,13 +217,14 @@ client_fullscreen_enter :: proc(client : ^Client, monitor_idx : Monitor_Index) {
 client_fullscreen_exit :: proc(client : ^Client, monitor_idx : Monitor_Index) {
     if !client.fullscreen do return
 
-    X.ChangeProperty(g_display, client.window, g_atoms.net[.WM_State], X.XA_ATOM, 32, X.PropModeReplace, nil, 0)
-    client.border     = client.old_state.border
-    client.floating   = client.old_state.floating
+    _, client_extra := delete_key(&g_clients_extra, client.window)
+    client.border     = client_extra.old_state.border
+    client.floating   = client_extra.old_state.floating
     client.fullscreen = false
+    X.ChangeProperty(g_display, client.window, g_atoms.net[.WM_State], X.XA_ATOM, 32, X.PropModeReplace, nil, 0)
 
     if !client.floating do client_bury(client^)
-    _client_resize(client, client.old_state.pos, client.old_state.size)
+    _client_resize(client, client_extra.old_state.pos, client_extra.old_state.size)
     monitor_arrange(monitor_idx)
 }
 
@@ -303,7 +311,7 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
     client.size.y = attrs.height
 
     client.border = STYLE.border.width
-    client.original.border = attrs.border_width
+    g_clients_extra[client.window] = { original = { border = attrs.border_width } }
 
     client_update_name(&client)
 
@@ -362,6 +370,8 @@ client_unmanage :: proc(client_idx : Client_Index, $destroyed : bool) {
     if client_idx == CLIENT_NONE do return
 
     client := g_clients[client_idx]
+    client_extra := g_clients_extra[client.window]
+    _ = client_extra // Used when !destroyed
 
     delete(client.name)
     client_stack_detach(client.monitor, client_idx)
@@ -372,7 +382,7 @@ client_unmanage :: proc(client_idx : Client_Index, $destroyed : bool) {
         X.SetErrorHandler(xerror_idc)
         X.SelectInput(g_display, client.window, {})
 
-        wc := X.XWindowChanges{ border_width = client.original.border }
+        wc := X.XWindowChanges{ border_width = client_extra.original.border }
         X.ConfigureWindow(g_display, client.window, {.CWBorderWidth}, &wc)
 
         X.UngrabButton(g_display, X.AnyButton, {.AnyModifier}, client.window)

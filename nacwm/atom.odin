@@ -75,6 +75,7 @@ setup_wmhints :: proc() {
     X.DeleteProperty(g_display, g_screen.root, g_atoms.net[.Client_List])
 }
 
+// TODO: Both wintype and state can be a list of things, yet this only handles the first element
 client_update_type :: proc(client : ^Client) {
     window := client.window
 
