@@ -32,8 +32,8 @@ focus_reset :: proc() {
 // Edit pos and size following hints
 // Returns whether something changed
 apply_size_hints :: proc(client : ^Client, pos : ^[2]i32, size : ^[2]i32) -> bool {
-    size.x = max(1, size.x)
-    size.y = max(1, size.y)
+    size.x = max(STYLE.bar.height, size.x)
+    size.y = max(STYLE.bar.height, size.y)
 
     client_size := client_size_real(client^)
 
