@@ -2,16 +2,6 @@ package nacwm
 
 import X "../vendor/x11/xlib"
 
-Restart_Window_Data :: struct {
-    window   : X.Window, // Probably 32bits too large, but just in case
-    data     : bit_field u32 {
-        monitor  : Monitor_Index  | 8,
-        tags     : u16 /* Tags */ | 16,
-        floating : bool           | 1,
-    },
-}
-#assert(size_of(Restart_Window_Data) == size_of([2]uint))
-
 scan_windows :: proc() {
     _w : X.Window
     windows : [^]X.Window

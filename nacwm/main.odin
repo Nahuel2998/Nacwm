@@ -1,9 +1,7 @@
 package nacwm
 
 import "base:runtime"
-import "core:os"
 import "core:log"
-import "core:strings"
 import "core:sys/posix"
 import X "../vendor/x11/xlib"
 
@@ -18,7 +16,6 @@ g_screen : Screen_Info
 
 g_context : runtime.Context
 
-g_restart := false
 g_running := true
 
 main :: proc() {
@@ -40,14 +37,7 @@ main :: proc() {
     scan_windows()
     run()
 
-    if g_restart {
-        clients_save()
-        argv := make([]cstring, len(os.args) + 1)
-        for arg, i in os.args {
-            argv[i] = strings.clone_to_cstring(arg)
-        }
-        posix.execvp(argv[0], raw_data(argv))
-    }
+    if g_restart do restart()
 }
 
 run :: proc() {
@@ -71,10 +61,11 @@ setup :: proc() {
     setup_signals()
 
     setup_screen()
-    setup_monitors()
-
     setup_atoms()
     setup_wmhints()
+
+    setup_monitors()
+    monitors_restore()
 
     setup_cursors()
     setup_colors()
