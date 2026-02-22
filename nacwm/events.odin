@@ -234,6 +234,8 @@ recv_mapping_notify :: proc(event : X.XEvent) {
 recv_map_notify :: proc(event : X.XEvent) {
     event := event.xmap
 
+    if g_notification_window != X.None do return
+
     hints : X.XClassHint
     X.GetClassHint(g_display, event.window, &hints)
     if hints.res_class == NOTIFICATION_CLASS {
