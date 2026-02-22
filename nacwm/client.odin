@@ -135,9 +135,12 @@ client_focus :: proc(client_idx : Client_Index) {
 client_unfocus :: proc() {
     if g_client_idx == CLIENT_NONE do return
 
-    client := g_clients[g_client_idx]
-    grab_buttons(client.window, false)
-    X.SetWindowBorder(g_display, client.window, g_scheme[.Normal].border);
+    // g_client_idx could point to a client that was unmanaged
+    if g_client_idx < len(g_clients) {
+        client := g_clients[g_client_idx]
+        grab_buttons(client.window, false)
+        X.SetWindowBorder(g_display, client.window, g_scheme[.Normal].border);
+    }
 
     g_client_idx = CLIENT_NONE
 }
@@ -392,7 +395,6 @@ client_unmanage :: proc(client_idx : Client_Index, $destroyed : bool) {
     }
 
     if client_idx == g_client_idx {
-        g_client_idx = CLIENT_NONE
         monitor_refocus()
     }
     update_client_list()
