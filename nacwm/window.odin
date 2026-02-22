@@ -64,7 +64,7 @@ window_take_focus :: proc(window : X.Window, focus : bool) {
 }
 
 // -- Utils
-monitor_idx_from_window :: proc(window : X.Window, default := g_monitor_idx) -> Monitor_Index {
+monitor_idx_from_window :: proc(window : X.Window, default := g_selected.monitor) -> Monitor_Index {
     if window == g_screen.root {
         pos, ok := get_root_ptr()
         if ok do return monitor_idx_from_rect(pos, {1, 1}, default)

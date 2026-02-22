@@ -14,9 +14,14 @@ Screen_Info :: struct {
 }
 g_screen : Screen_Info
 
-g_context : runtime.Context
+Selected :: struct {
+    monitor : Monitor_Index,
+    client  : Client_Index,
+}
+g_selected := Selected{ 0, CLIENT_NONE }
+g_running  := true
 
-g_running := true
+g_context : runtime.Context
 
 main :: proc() {
     context.logger = log.create_console_logger()

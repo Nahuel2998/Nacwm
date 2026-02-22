@@ -23,15 +23,12 @@ Monitor :: struct {
 }
 g_monitors : [dynamic]Monitor
 
-// Currently selected monitor; index into g_monitors
-g_monitor_idx : Monitor_Index
-
 setup_monitors :: proc() -> (changed : bool) {
     if xinerama.IsActive(g_display) do changed = setup_monitors_xinerama()
     else                            do changed = setup_monitors_default()
 
     if changed {
-        g_monitor_idx = monitor_idx_from_window(g_screen.root, default=Monitor_Index(0))
+        g_selected.monitor = monitor_idx_from_window(g_screen.root, default=Monitor_Index(0))
     }
     return
 }
@@ -126,8 +123,8 @@ monitor_pop :: proc() -> (changed : bool) {
         client_stack_attach(client.monitor, client_idx)
     }
 
-    if g_monitor_idx >= len(g_monitors) {
-        g_monitor_idx = Monitor_Index(0)
+    if g_selected.monitor >= len(g_monitors) {
+        g_selected.monitor = Monitor_Index(0)
     }
 
     monitor_delete(monitor)
@@ -157,7 +154,7 @@ monitor_show_hide :: proc(monitor : Monitor) {
     }
 }
 
-monitor_arrange :: proc(monitor_idx := g_monitor_idx) {
+monitor_arrange :: proc(monitor_idx := g_selected.monitor) {
     monitor := g_monitors[monitor_idx]
 
     monitor_show_hide(monitor)
@@ -176,21 +173,21 @@ monitor_arrange_all :: proc() {
 
 // Switch focus to another monitor
 monitor_focus :: proc(monitor_idx : Monitor_Index) {
-    if monitor_idx == g_monitor_idx do return
+    if monitor_idx == g_selected.monitor do return
 
-    g_monitor_idx = monitor_idx
+    g_selected.monitor = monitor_idx
     monitor_refocus()
 }
 
 // Refocus the currently focused monitor
 monitor_refocus :: proc() {
-    monitor    := g_monitors[g_monitor_idx]
+    monitor    := g_monitors[g_selected.monitor]
     client_idx := monitor_first_visible_client(monitor)
     client_focus(client_idx)
 }
 
 // -- Utils
-monitor_idx_from_rect :: proc(pos : [2]i32, size : [2]i32, default := g_monitor_idx) -> Monitor_Index {
+monitor_idx_from_rect :: proc(pos : [2]i32, size : [2]i32, default := g_selected.monitor) -> Monitor_Index {
     area : i32
     res  := default
     for monitor, i in g_monitors {

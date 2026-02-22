@@ -46,9 +46,6 @@ Client_Extra :: struct {
 }
 g_clients_extra : map[X.Window]Client_Extra
 
-// Currently selected client, index into g_monitors[g_monitor_idx].clients
-g_client_idx := CLIENT_NONE
-
 client_attach :: proc(client : Client) -> Client_Index {
     append(&g_clients, client)
     return len(g_clients) - 1
@@ -72,8 +69,8 @@ client_detach :: proc(client_idx : Client_Index) {
         break
     }
 
-    if g_client_idx == len(g_clients) {
-        g_client_idx = client_idx
+    if g_selected.client == len(g_clients) {
+        g_selected.client = client_idx
     }
 }
 
@@ -99,8 +96,8 @@ client_swap :: proc(from_idx, to_idx : Client_Index) {
     g_clients[from_idx] = g_clients[to_idx]
     g_clients[to_idx]   = client
 
-    if      g_client_idx == from_idx do g_client_idx =   to_idx
-    else if g_client_idx ==   to_idx do g_client_idx = from_idx
+    if      g_selected.client == from_idx do g_selected.client =   to_idx
+    else if g_selected.client ==   to_idx do g_selected.client = from_idx
     #reverse for &client_idx in g_monitors[client.monitor].stack {
         if      client_idx == from_idx do client_idx =   to_idx
         else if client_idx ==   to_idx do client_idx = from_idx
@@ -112,7 +109,7 @@ client_swap :: proc(from_idx, to_idx : Client_Index) {
 // Switches focus to client_idx
 // A call with CLIENT_NONE will reset focus
 client_focus :: proc(client_idx : Client_Index) {
-    if client_idx == g_client_idx do return
+    if client_idx == g_selected.client do return
 
     client_unfocus()
     if client_idx == CLIENT_NONE {
@@ -123,8 +120,8 @@ client_focus :: proc(client_idx : Client_Index) {
 
     client_stack_detach(client.monitor, client_idx)
     client_stack_attach(client.monitor, client_idx)
-    g_monitor_idx = client.monitor
-    g_client_idx  = client_idx
+    g_selected.monitor = client.monitor
+    g_selected.client  = client_idx
 
     grab_buttons(client.window, true)
     X.SetWindowBorder(g_display, client.window, g_scheme[.Selected].border);
@@ -134,16 +131,16 @@ client_focus :: proc(client_idx : Client_Index) {
 }
 
 client_unfocus :: proc() {
-    if g_client_idx == CLIENT_NONE do return
+    if g_selected.client == CLIENT_NONE do return
 
-    // g_client_idx could point to a client that was unmanaged
-    if g_client_idx < len(g_clients) {
-        client := g_clients[g_client_idx]
+    // g_selected.client could point to a client that was unmanaged
+    if g_selected.client < len(g_clients) {
+        client := g_clients[g_selected.client]
         grab_buttons(client.window, false)
         X.SetWindowBorder(g_display, client.window, g_scheme[.Normal].border);
     }
 
-    g_client_idx = CLIENT_NONE
+    g_selected.client = CLIENT_NONE
 }
 
 // Floats or tiles a client
@@ -269,8 +266,8 @@ client_switch_monitor :: proc(client_idx : Client_Index, new_monitor_idx : Monit
     }
     client.monitor = new_monitor_idx
 
-    if client_idx == g_client_idx {
-        when follow do g_monitor_idx = client.monitor
+    if client_idx == g_selected.client {
+        when follow do g_selected.monitor = client.monitor
         else        do monitor_refocus()
     }
     monitor_arrange_all()
@@ -363,7 +360,7 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
 
     monitor_arrange(client.monitor)
     X.MapWindow(g_display, client.window)
-    if client.monitor == g_monitor_idx {
+    if client.monitor == g_selected.monitor {
         monitor_refocus()
     }
 }
@@ -394,7 +391,7 @@ client_unmanage :: proc(client_idx : Client_Index, $destroyed : bool) {
         X.UngrabServer(g_display)
     }
 
-    if client_idx == g_client_idx {
+    if client_idx == g_selected.client {
         monitor_refocus()
     }
     update_client_list()

@@ -90,31 +90,31 @@ do_action :: proc(action : Action) {
         log.panic("Failed to run command:", a)
 
     case View:
-        monitor := &g_monitors[g_monitor_idx]
+        monitor := &g_monitors[g_selected.monitor]
         monitor.tags = cast(Tags)a
         monitor_refocus()
-        monitor_arrange(g_monitor_idx)
+        monitor_arrange(g_selected.monitor)
         bar_draw(monitor^)
 
     case Select:
-        if g_client_idx == CLIENT_NONE do return
+        if g_selected.client == CLIENT_NONE do return
 
-        client := g_clients[g_client_idx]
+        client := g_clients[g_selected.client]
         if client.fullscreen do return
 
-        monitor := g_monitors[g_monitor_idx]
-        client_idx := nth_matching_client(g_client_idx, a.delta, monitor, client_is_visible_in_monitor)
+        monitor := g_monitors[g_selected.monitor]
+        client_idx := nth_matching_client(g_selected.client, a.delta, monitor, client_is_visible_in_monitor)
         client_focus(client_idx)
 
     case Move:
-        if g_client_idx == CLIENT_NONE do return
+        if g_selected.client == CLIENT_NONE do return
 
-        client := g_clients[g_client_idx]
+        client := g_clients[g_selected.client]
         if client.floating do return
 
         monitor := g_monitors[client.monitor]
         client_idx := nth_matching_client(
-            g_client_idx,
+            g_selected.client,
             a.delta,
             monitor,
             proc(idx : Client_Index, mon : Monitor) -> bool {
@@ -122,7 +122,7 @@ do_action :: proc(action : Action) {
                 return client_is_visible_in_monitor(idx, mon) && !clt.floating
             },
         )
-        client_swap(g_client_idx, client_idx)
+        client_swap(g_selected.client, client_idx)
 
     case Select_Monitor:
         if a.target >= len(g_monitors) do return
@@ -130,25 +130,25 @@ do_action :: proc(action : Action) {
         monitor_focus(a.target)
 
     case To_Tag:
-        if g_client_idx == CLIENT_NONE do return
+        if g_selected.client == CLIENT_NONE do return
 
-        g_clients[g_client_idx].tags = cast(Tags)a
+        g_clients[g_selected.client].tags = cast(Tags)a
         monitor_refocus()
-        monitor_arrange(g_monitor_idx)
-        bar_draw(g_monitors[g_monitor_idx])
+        monitor_arrange(g_selected.monitor)
+        bar_draw(g_monitors[g_selected.monitor])
 
     case To_Monitor:
         if a.target >= len(g_monitors) do return
 
-        client_switch_monitor(g_client_idx, a.target, move=true, follow=false)
+        client_switch_monitor(g_selected.client, a.target, move=true, follow=false)
 
     case Float:
-        client_float(g_client_idx)
+        client_float(g_selected.client)
 
     case Center:
-        if g_client_idx == CLIENT_NONE do return
+        if g_selected.client == CLIENT_NONE do return
 
-        client := &g_clients[g_client_idx]
+        client := &g_clients[g_selected.client]
         if !client.floating do return
 
         monitor := g_monitors[client.monitor]
@@ -156,7 +156,7 @@ do_action :: proc(action : Action) {
         client_resize(client, pos, client.size)
 
     case Shoot:
-        client_kill(g_client_idx, !a.unkindly)
+        client_kill(g_selected.client, !a.unkindly)
 
     case Mouse_Move:
         client_mouse_action(.Move)
@@ -165,7 +165,7 @@ do_action :: proc(action : Action) {
         client_mouse_action(.Resize)
 
     case Master_Resize:
-        monitor    := &g_monitors[g_monitor_idx]
+        monitor    := &g_monitors[g_selected.monitor]
         new_factor := monitor.master_factor + a.delta
         if new_factor < 0.05 || new_factor > 0.95 do return
 

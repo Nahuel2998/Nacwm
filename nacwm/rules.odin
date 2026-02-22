@@ -47,7 +47,7 @@ client_apply_rules :: proc(client : ^Client) {
     if hints.res_class != nil do X.Free(cast(rawptr)hints.res_class)
     if hints.res_name  != nil do X.Free(cast(rawptr)hints.res_name)
 
-    if client.monitor == CLIENT_NONE do client.monitor = g_monitor_idx
+    if client.monitor == CLIENT_NONE do client.monitor = g_selected.monitor
     if client.tags    == {}          do client.tags    = g_monitors[client.monitor].tags
     return
 }
