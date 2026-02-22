@@ -57,6 +57,7 @@ client_attach :: proc(client : Client) -> Client_Index {
 client_detach :: proc(client_idx : Client_Index) {
     if client_idx == CLIENT_NONE do return
 
+    delete(g_clients[client_idx].name)
     delete_key(&g_clients_extra, g_clients[client_idx].window)
     unordered_remove(&g_clients, client_idx)
     // unordered_remove swaps last element for the one we just deleted
@@ -374,7 +375,6 @@ client_unmanage :: proc(client_idx : Client_Index, $destroyed : bool) {
     client_extra := g_clients_extra[client.window]
     _ = client_extra // Used when !destroyed
 
-    delete(client.name)
     client_stack_detach(client.monitor, client_idx)
     client_detach(client_idx)
 
