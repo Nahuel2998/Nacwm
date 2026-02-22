@@ -77,19 +77,24 @@ setup_wmhints :: proc() {
     X.DeleteProperty(g_display, g_screen.root, g_atoms.net[.Client_List])
 }
 
-// TODO: Both wintype and state can be a list of things, yet this only handles the first element
 client_update_type :: proc(client : ^Client) {
     window := client.window
 
-    wintype, ok_wintype := get_property(window, g_atoms.net[.WM_Window_Type], X.XA_ATOM, X.Atom, 1, false)
-    if ok_wintype && wintype == g_atoms.net[.WM_Window_Type_Dialog] {
+    wintypes, wintypes_count, ok_wintypes := get_property_data(window, g_atoms.net[.WM_Window_Type], X.XA_ATOM, 8, false)
+    if wintypes_count > 0 do for atom in (cast([^]X.Atom)wintypes)[:wintypes_count] {
+        if atom != g_atoms.net[.WM_Window_Type_Dialog] do continue
         client.floating = true
+        break
     }
+    if ok_wintypes do X.Free(wintypes)
 
-    state, ok_state := get_property(window, g_atoms.net[.WM_State], X.XA_ATOM, X.Atom, 1, false)
-    if ok_state && state == g_atoms.net[.WM_Fullscreen] {
+    states, states_count, ok_states := get_property_data(window, g_atoms.net[.WM_State], X.XA_ATOM, 8, false)
+    if states_count > 0 do for atom in (cast([^]X.Atom)states)[:states_count] {
+        if atom != g_atoms.net[.WM_Fullscreen] do continue
         client_fullscreen(client, client.monitor, true)
+        break
     }
+    if ok_states do X.Free(states)
 }
 
 client_update_wmhints :: proc(client : ^Client) {
