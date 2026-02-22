@@ -55,6 +55,8 @@ verify_bindings :: proc() {
 
         case Select:
             if a.delta == 0 do log.panic(a, "must be anything but 0")
+        case Move:
+            if a.delta == 0 do log.panic(a, "must be anything but 0")
         }
     }
 }
@@ -123,6 +125,8 @@ do_action :: proc(action : Action) {
         client_swap(g_client_idx, client_idx)
 
     case Select_Monitor:
+        if a.target >= len(g_monitors) do return
+
         monitor_focus(a.target)
 
     case To_Tag:

@@ -186,8 +186,6 @@ monitor_focus :: proc(monitor_idx : Monitor_Index) {
 monitor_refocus :: proc() {
     monitor    := g_monitors[g_monitor_idx]
     client_idx := monitor_first_visible_client(monitor)
-    if client_idx == g_client_idx do return
-
     client_focus(client_idx)
 }
 
