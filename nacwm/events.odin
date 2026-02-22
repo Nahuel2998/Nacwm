@@ -312,7 +312,7 @@ recv_property_notify :: proc(event : X.XEvent) {
 recv_unmap_notify :: proc(event : X.XEvent) {
     event := event.xunmap
 
-    if event.window == g_notification_window {
+    if !NOTIFICATION_PRESERVE && event.window == g_notification_window {
         g_notification_window = X.None
     }
 

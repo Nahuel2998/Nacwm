@@ -13,6 +13,9 @@ BAR_STATUS_FALLBACK :: "Now | Today"
 // NOTE: More correct would be to respect _NET_WM_STATE_ABOVE,
 //       but I don't want to announce I support it given it's for a single window at a time
 NOTIFICATION_CLASS :: "Dunst"
+// If you know your notification daemon doesn't destroy the window,
+// this may be set to true to not check for NOTIFICATION_CLASS on every window
+NOTIFICATION_PRESERVE :: true
 
 STYLE :: Style{
     border = {
