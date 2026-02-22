@@ -75,29 +75,29 @@ BINDINGS := [?]Keybind{
     { {.Mod4Mask},               .XK_9,      View{9} },
     { {.Mod4Mask},               .XK_0,      ~View{} },
 
-    { {.Mod4Mask, .ShiftMask},   .XK_1,      ToTag{1} },
-    { {.Mod4Mask, .ShiftMask},   .XK_2,      ToTag{2} },
-    { {.Mod4Mask, .ShiftMask},   .XK_3,      ToTag{3} },
-    { {.Mod4Mask, .ShiftMask},   .XK_4,      ToTag{4} },
-    { {.Mod4Mask, .ShiftMask},   .XK_5,      ToTag{5} },
-    { {.Mod4Mask, .ShiftMask},   .XK_6,      ToTag{6} },
-    { {.Mod4Mask, .ShiftMask},   .XK_7,      ToTag{7} },
-    { {.Mod4Mask, .ShiftMask},   .XK_8,      ToTag{8} },
-    { {.Mod4Mask, .ShiftMask},   .XK_9,      ToTag{9} },
-    { {.Mod4Mask, .ShiftMask},   .XK_0,      ~ToTag{} },
+    { {.Mod4Mask, .ShiftMask},   .XK_1,      To_Tag{1} },
+    { {.Mod4Mask, .ShiftMask},   .XK_2,      To_Tag{2} },
+    { {.Mod4Mask, .ShiftMask},   .XK_3,      To_Tag{3} },
+    { {.Mod4Mask, .ShiftMask},   .XK_4,      To_Tag{4} },
+    { {.Mod4Mask, .ShiftMask},   .XK_5,      To_Tag{5} },
+    { {.Mod4Mask, .ShiftMask},   .XK_6,      To_Tag{6} },
+    { {.Mod4Mask, .ShiftMask},   .XK_7,      To_Tag{7} },
+    { {.Mod4Mask, .ShiftMask},   .XK_8,      To_Tag{8} },
+    { {.Mod4Mask, .ShiftMask},   .XK_9,      To_Tag{9} },
+    { {.Mod4Mask, .ShiftMask},   .XK_0,      ~To_Tag{} },
 
     { {.Mod4Mask},               .XK_n,      Select{-1} },
     { {.Mod4Mask},               .XK_e,      Select{+1} },
     { {.Mod4Mask, .ShiftMask},   .XK_n,      Move{-1} },
     { {.Mod4Mask, .ShiftMask},   .XK_e,      Move{+1} },
 
-    { {.Mod4Mask},               .XK_m,      SelectMonitor{1} },
-    { {.Mod4Mask},               .XK_h,      SelectMonitor{0} },
-    { {.Mod4Mask, .ShiftMask},   .XK_m,      ToMonitor{1} },
-    { {.Mod4Mask, .ShiftMask},   .XK_h,      ToMonitor{0} },
+    { {.Mod4Mask},               .XK_m,      Select_Monitor{1} },
+    { {.Mod4Mask},               .XK_h,      Select_Monitor{0} },
+    { {.Mod4Mask, .ShiftMask},   .XK_m,      To_Monitor{1} },
+    { {.Mod4Mask, .ShiftMask},   .XK_h,      To_Monitor{0} },
 
-    { {.Mod4Mask, .ControlMask}, .XK_m,      MasterResize{-0.05} },
-    { {.Mod4Mask, .ControlMask}, .XK_h,      MasterResize{+0.05} },
+    { {.Mod4Mask, .ControlMask}, .XK_m,      Master_Resize{-0.05} },
+    { {.Mod4Mask, .ControlMask}, .XK_h,      Master_Resize{+0.05} },
 
     { {.Mod4Mask},               .XK_t,      Float{}  },
     { {.Mod4Mask},               .XK_c,      Center{} },
@@ -110,8 +110,8 @@ BINDINGS := [?]Keybind{
 }
 
 BUTTON_BINDINGS := [?]Buttonbind{
-    { .Client, {.Mod4Mask}, .Button1, MouseMove{}   },
-    { .Client, {.Mod4Mask}, .Button3, MouseResize{} },
+    { .Client, {.Mod4Mask}, .Button1, Mouse_Move{}   },
+    { .Client, {.Mod4Mask}, .Button3, Mouse_Resize{} },
 }
 
 /*

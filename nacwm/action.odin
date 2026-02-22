@@ -9,34 +9,34 @@ Action :: union {
     Thats,
     Spawn,
     View,
-    SelectMonitor,
+    Select_Monitor,
     Select,
     Move,
-    ToTag,
-    ToMonitor,
+    To_Tag,
+    To_Monitor,
     Float,
     Center,
     Shoot,
-    MouseMove,
-    MouseResize,
-    MasterResize,
+    Mouse_Move,
+    Mouse_Resize,
+    Master_Resize,
 }
 
 Rebirth :: distinct struct{ }
 Thats   :: distinct struct{ }
 Spawn :: distinct []cstring
 View  :: distinct Tags
-SelectMonitor :: distinct struct{ target : Monitor_Index }
-Select        :: distinct struct{ delta : i8 }
-Move      :: distinct struct{ delta : i8 }
-ToTag     :: distinct Tags
-ToMonitor :: distinct struct{ target : Monitor_Index }
-Float     :: distinct struct{ }
-Center    :: distinct struct{ }
-Shoot     :: distinct struct{ unkindly : bool }
-MouseMove   :: distinct struct{ }
-MouseResize :: distinct struct{ }
-MasterResize :: distinct struct{ delta : f32 }
+Select_Monitor :: distinct struct{ target : Monitor_Index }
+Select         :: distinct struct{ delta : i8 }
+Move       :: distinct struct{ delta : i8 }
+To_Tag     :: distinct Tags
+To_Monitor :: distinct struct{ target : Monitor_Index }
+Float      :: distinct struct{ }
+Center     :: distinct struct{ }
+Shoot      :: distinct struct{ unkindly : bool }
+Mouse_Move   :: distinct struct{ }
+Mouse_Resize :: distinct struct{ }
+Master_Resize :: distinct struct{ delta : f32 }
 
 // Checks whether there's something wrong in the bindings config
 verify_bindings :: proc() {
@@ -45,12 +45,12 @@ verify_bindings :: proc() {
         case Spawn:
             if a[len(a) - 1] != nil do log.panic("Spawn{", a, "} doesn't end with `nil`. It should")
 
-        case ToMonitor:
+        case To_Monitor:
             if a.target < 0 do log.panic(a, "can't be negative. Target must be a Monitor_Index")
-        case SelectMonitor:
+        case Select_Monitor:
             if a.target < 0 do log.panic(a, "can't be negative. Target must be a Monitor_Index")
 
-        case MasterResize:
+        case Master_Resize:
             if a.delta < -1 || a.delta > 1 do log.panic(a, "must be a float in range -1..1")
 
         case Select:
@@ -122,10 +122,10 @@ do_action :: proc(action : Action) {
         )
         client_swap(g_client_idx, client_idx)
 
-    case SelectMonitor:
+    case Select_Monitor:
         monitor_focus(a.target)
 
-    case ToTag:
+    case To_Tag:
         if g_client_idx == CLIENT_NONE do return
 
         g_clients[g_client_idx].tags = cast(Tags)a
@@ -133,7 +133,7 @@ do_action :: proc(action : Action) {
         monitor_arrange(g_monitor_idx)
         bar_draw(g_monitors[g_monitor_idx])
 
-    case ToMonitor:
+    case To_Monitor:
         if a.target >= len(g_monitors) do return
 
         client_switch_monitor(g_client_idx, a.target, move=true, follow=false)
@@ -154,13 +154,13 @@ do_action :: proc(action : Action) {
     case Shoot:
         client_kill(g_client_idx, !a.unkindly)
 
-    case MouseMove:
+    case Mouse_Move:
         client_mouse_action(.Move)
 
-    case MouseResize:
+    case Mouse_Resize:
         client_mouse_action(.Resize)
 
-    case MasterResize:
+    case Master_Resize:
         monitor    := &g_monitors[g_monitor_idx]
         new_factor := monitor.master_factor + a.delta
         if new_factor < 0.05 || new_factor > 0.95 do return
