@@ -27,8 +27,10 @@ X_Net_Atom :: enum {
 Nacwm_Atom :: enum {
     Window_Data,
     Monitor_Data,
+    Command,
 }
 g_atoms : struct {
+    utf8  : X.Atom,
     wm    : [X_WM_Atom]X.Atom,
     net   : [X_Net_Atom]X.Atom,
     nacwm : [Nacwm_Atom]X.Atom,
@@ -38,7 +40,8 @@ g_wmcheckwin : X.Window
 
 setup_atoms :: proc() {
     g_atoms = {
-        wm  = {
+        utf8 = X.InternAtom(g_display, "UTF8_STRING", false),
+        wm = {
             .Protocols  = X.InternAtom(g_display, "WM_PROTOCOLS",     false),
             .Delete     = X.InternAtom(g_display, "WM_DELETE_WINDOW", false),
             .State      = X.InternAtom(g_display, "WM_STATE",         false),
@@ -56,18 +59,17 @@ setup_atoms :: proc() {
             .WM_Window_Type_Dialog = X.InternAtom(g_display, "_NET_WM_WINDOW_TYPE_DIALOG", false),
         },
         nacwm = {
-            .Window_Data  = X.InternAtom(g_display, "_NACWM_WINDOW_DATA", false),
+            .Window_Data  = X.InternAtom(g_display, "_NACWM_WINDOW_DATA",  false),
             .Monitor_Data = X.InternAtom(g_display, "_NACWM_MONITOR_DATA", false),
+            .Command      = X.InternAtom(g_display, "_NACWM_COMMAND",      false),
         },
     }
 }
 
 setup_wmhints :: proc() {
-    utf8str := X.InternAtom(g_display, "UTF8_STRING", false)
-
     wm_name := WM_NAME
     g_wmcheckwin = X.CreateSimpleWindow(g_display, g_screen.root, 0, 0, 1, 1, 0, 0, 0)
-    X.ChangeProperty(g_display, g_wmcheckwin,  g_atoms.net[.WM_Name],      utf8str,  8, X.PropModeReplace, raw_data(wm_name), len(WM_NAME))
+    X.ChangeProperty(g_display, g_wmcheckwin,  g_atoms.net[.WM_Name], g_atoms.utf8,  8, X.PropModeReplace, raw_data(wm_name), len(WM_NAME))
     X.ChangeProperty(g_display, g_wmcheckwin,  g_atoms.net[.WM_Check], X.XA_WINDOW, 32, X.PropModeReplace, &g_wmcheckwin, 1)
     X.ChangeProperty(g_display, g_screen.root, g_atoms.net[.WM_Check], X.XA_WINDOW, 32, X.PropModeReplace, &g_wmcheckwin, 1)
 

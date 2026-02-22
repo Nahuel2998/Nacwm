@@ -1,6 +1,7 @@
 package nacwm
 
 import "core:log"
+import "core:strings"
 import X "../vendor/x11/xlib"
 
 g_handlers := #partial [X.EventType]proc(X.XEvent) {
@@ -271,9 +272,17 @@ recv_motion_notify :: proc(event : X.XEvent) {
 recv_property_notify :: proc(event : X.XEvent) {
     event := event.xproperty
 
-    if event.window == g_screen.root && event.atom == X.XA_WM_NAME {
-        bar_status_update()
-        return
+    if event.window == g_screen.root {
+        switch event.atom {
+        case X.XA_WM_NAME:
+            bar_status_update()
+
+        case g_atoms.nacwm[.Command]:
+            strings.builder_reset(&g_ipc_command)
+            ok := get_text_property_sb(g_screen.root, g_atoms.nacwm[.Command], &g_ipc_command)
+            if !ok do return
+            ipc_action(strings.to_string(g_ipc_command))
+        }
     }
     if event.state == .PropertyDelete do return
 
