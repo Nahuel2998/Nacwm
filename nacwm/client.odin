@@ -76,12 +76,10 @@ client_detach :: proc(client_idx : Client_Index) {
     }
 }
 
-// TODO: This won't need monitor_idx in the future
 client_stack_attach :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
     append(&g_monitors[monitor_idx].stack, client_idx)
 }
 
-// NOTE: When paired with `detach`, it must be called BEFORE
 client_stack_detach :: proc(monitor_idx : Monitor_Index, client_idx : Client_Index) {
     if client_idx == CLIENT_NONE do return
 
@@ -131,7 +129,7 @@ client_focus :: proc(client_idx : Client_Index) {
     X.SetWindowBorder(g_display, client.window, g_scheme[.Selected].border);
     window_take_focus(client.window, !client.no_focus)
 
-    // TODO: Bar title (on all paths)
+    // TODO: Bar title? (on all paths)
 }
 
 client_unfocus :: proc() {
@@ -425,7 +423,6 @@ client_is_visible :: #force_inline proc(client_idx : Client_Index) -> bool {
     return card(client.tags & g_monitors[client.monitor].tags) > 0
 }
 
-// TODO: Consider whether monitor should be passed here
 client_is_visible_in_monitor :: #force_inline proc(client_idx : Client_Index, monitor : Monitor) -> bool {
     assert(client_idx != CLIENT_NONE)
     client := g_clients[client_idx]

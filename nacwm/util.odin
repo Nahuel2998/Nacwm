@@ -37,7 +37,6 @@ apply_size_hints :: proc(client : ^Client, pos : ^[2]i32, size : ^[2]i32) -> boo
 
     client_size := client_size_real(client^)
 
-    // TODO: Differ between automatic and interact
     if pos.x > g_screen.size.x do pos.x = g_screen.size.x - client_size.x
     if pos.y > g_screen.size.y do pos.y = g_screen.size.y - client_size.y
     if pos.x + size.x < 0      do pos.x = 0
@@ -46,7 +45,7 @@ apply_size_hints :: proc(client : ^Client, pos : ^[2]i32, size : ^[2]i32) -> boo
     if client.floating {
         if !client.hints.valid do client_update_sizehints(client)
 
-        // TODO: Base/increment calculations
+        // TODO: Base/increment calculations?
 
         if client.hints.min.x != 0 do size.x = max(size.x, client.hints.min.x)
         if client.hints.min.y != 0 do size.y = max(size.y, client.hints.min.y)
@@ -57,12 +56,11 @@ apply_size_hints :: proc(client : ^Client, pos : ^[2]i32, size : ^[2]i32) -> boo
     return pos^ != client.pos || size^ != client.size
 }
 
-// TODO: Consider whether this should take Monitor_Index instead
-monitor_nth_matching_client :: #force_inline proc(
-    monitor  : Monitor,
+nth_matching_client :: #force_inline proc(
     start    : Client_Index,
     delta    : i8,
-    $matcher : proc(Client_Index, Monitor) -> bool,
+    userdata : $T,
+    $matcher : proc(Client_Index, T) -> bool,
 ) -> Client_Index {
     assert(delta != 0)
 
@@ -74,7 +72,7 @@ monitor_nth_matching_client :: #force_inline proc(
         client_idx %= len(g_clients)
         if client_idx < 0 do client_idx += len(g_clients)
 
-        if matcher(client_idx, monitor) {
+        if matcher(client_idx, userdata) {
             until -= 1
             if until == 0 do return client_idx
         }

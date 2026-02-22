@@ -142,7 +142,6 @@ client_update_name :: proc(client : ^Client) {
     client.name = name
 }
 
-// TODO: Consider keeping track of this somewhere
 update_client_list :: proc() {
     num_clients := cast(i32)len(g_clients)
     if num_clients == 0 {

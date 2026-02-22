@@ -103,7 +103,7 @@ do_action :: proc(action : Action) {
         if client.fullscreen do return
 
         monitor := g_monitors[g_monitor_idx]
-        client_idx := monitor_nth_matching_client(monitor, g_client_idx, a.delta, client_is_visible_in_monitor)
+        client_idx := nth_matching_client(g_client_idx, a.delta, monitor, client_is_visible_in_monitor)
         client_focus(client_idx)
 
     case Move:
@@ -113,10 +113,10 @@ do_action :: proc(action : Action) {
         if client.floating do return
 
         monitor := g_monitors[client.monitor]
-        client_idx := monitor_nth_matching_client(
-            monitor,
+        client_idx := nth_matching_client(
             g_client_idx,
             a.delta,
+            monitor,
             proc(idx : Client_Index, mon : Monitor) -> bool {
                 clt := g_clients[idx]
                 return client_is_visible_in_monitor(idx, mon) && !clt.floating
