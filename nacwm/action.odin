@@ -9,10 +9,12 @@ Action :: union {
     Thats,
     Spawn,
     View,
+    Toggle_View,
     Select_Monitor,
     Select,
     Swap,
     To_Tag,
+    Toggle_Tag,
     To_Monitor,
     Float,
     Center,
@@ -20,26 +22,32 @@ Action :: union {
     Mouse_Move,
     Mouse_Resize,
     Mouse_View,
+    Mouse_Toggle_View,
     Mouse_To_Tag,
+    Mouse_Toggle_Tag,
     Master_Resize,
 }
 
 Rebirth :: distinct struct{ }
 Thats   :: distinct struct{ }
 Spawn :: distinct []cstring
-View  :: distinct Tags
+View        :: distinct Tags
+Toggle_View :: distinct Tags
 Select_Monitor :: distinct struct{ target : Monitor_Index }
 Select         :: distinct struct{ delta : i8 }
 Swap       :: distinct struct{ delta : i8 }
 To_Tag     :: distinct Tags
+Toggle_Tag :: distinct Tags
 To_Monitor :: distinct struct{ target : Monitor_Index }
 Float      :: distinct struct{ }
 Center     :: distinct struct{ }
 Shoot      :: distinct struct{ unkindly : bool }
-Mouse_Move   :: distinct struct{ }
-Mouse_Resize :: distinct struct{ }
-Mouse_View   :: distinct struct{ }
-Mouse_To_Tag :: distinct struct{ }
+Mouse_Move        :: distinct struct{ }
+Mouse_Resize      :: distinct struct{ }
+Mouse_View        :: distinct struct{ }
+Mouse_Toggle_View :: distinct struct{ }
+Mouse_To_Tag      :: distinct struct{ }
+Mouse_Toggle_Tag  :: distinct struct{ }
 Master_Resize :: distinct struct{ delta : f32 }
 
 // Checks whether there's something wrong in the bindings config
@@ -95,10 +103,11 @@ do_action :: proc(action : Action) {
 
     case View:
         monitor := &g_monitors[g_selected.monitor]
-        monitor.tags = cast(Tags)a
-        monitor_refocus()
-        monitor_arrange(g_selected.monitor)
-        bar_draw(monitor^)
+        monitor_tags_set(monitor, cast(Tags)a, false)
+
+    case Toggle_View:
+        monitor := &g_monitors[g_selected.monitor]
+        monitor_tags_set(monitor, cast(Tags)a, true)
 
     case Select:
         if g_selected.client == CLIENT_NONE do return
@@ -135,11 +144,13 @@ do_action :: proc(action : Action) {
 
     case To_Tag:
         if g_selected.client == CLIENT_NONE do return
+        client := &g_clients[g_selected.client]
+        client_tags_set(client, cast(Tags)a, false)
 
-        g_clients[g_selected.client].tags = cast(Tags)a
-        monitor_refocus()
-        monitor_arrange(g_selected.monitor)
-        bar_draw(g_monitors[g_selected.monitor])
+    case Toggle_Tag:
+        if g_selected.client == CLIENT_NONE do return
+        client := &g_clients[g_selected.client]
+        client_tags_set(client, cast(Tags)a, true)
 
     case To_Monitor:
         if a.target >= len(g_monitors) do return
@@ -173,10 +184,20 @@ do_action :: proc(action : Action) {
         if !ok do return
         do_action(View{tag})
 
+    case Mouse_Toggle_View:
+        tag, ok := get_clicked_tag()
+        if !ok do return
+        do_action(Toggle_View{tag})
+
     case Mouse_To_Tag:
         tag, ok := get_clicked_tag()
         if !ok do return
         do_action(To_Tag{tag})
+
+    case Mouse_Toggle_Tag:
+        tag, ok := get_clicked_tag()
+        if !ok do return
+        do_action(Toggle_Tag{tag})
 
     case Master_Resize:
         monitor    := &g_monitors[g_selected.monitor]

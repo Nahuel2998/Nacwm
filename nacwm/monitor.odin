@@ -207,3 +207,11 @@ monitor_first_visible_client :: #force_inline proc(monitor : Monitor) -> Client_
     }
     return CLIENT_NONE
 }
+
+monitor_tags_set :: proc(monitor : ^Monitor, tags : Tags, $toggle : bool) {
+    when toggle do monitor.tags |= tags
+    else        do monitor.tags  = tags
+    monitor_refocus()
+    monitor_arrange(g_selected.monitor)
+    bar_draw(monitor^)
+}

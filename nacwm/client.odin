@@ -437,3 +437,11 @@ client_is_fixed :: #force_inline proc(client : Client) -> bool {
     return client.hints.min != {0, 0} \
         && client.hints.min == client.hints.max
 }
+
+client_tags_set :: proc(client : ^Client, tags : Tags, $toggle : bool) {
+    when toggle do client.tags |= tags
+    else        do client.tags  = tags
+    monitor_refocus()
+    monitor_arrange(client.monitor)
+    bar_draw(g_monitors[client.monitor])
+}

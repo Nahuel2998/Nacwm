@@ -23,6 +23,10 @@ ipc_action :: proc(command : string) {
         tags := parse_tags(command, arg)
         do_action(View(tags))
 
+    case "toggle-view": if !has_arg do return
+        tags := parse_tags(command, arg)
+        do_action(Toggle_View(tags))
+
     case "select": if !has_arg do return
         delta, ok_delta := strconv.parse_int(command[arg:], 10)
         if !ok_delta || delta == 0 do return
@@ -41,6 +45,10 @@ ipc_action :: proc(command : string) {
     case "to-tag": if !has_arg do return
         tags := parse_tags(command, arg)
         do_action(To_Tag(tags))
+
+    case "toggle-tag": if !has_arg do return
+        tags := parse_tags(command, arg)
+        do_action(Toggle_Tag(tags))
 
     case "to-monitor": if !has_arg do return
         monitor_idx, ok_mon := strconv.parse_int(command[arg:], 10)
