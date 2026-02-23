@@ -28,27 +28,27 @@ Action :: union {
     Master_Resize,
 }
 
-Rebirth :: distinct struct{ }
-Thats   :: distinct struct{ }
-Spawn :: distinct []cstring
+Rebirth :: struct{ }
+Thats   :: struct{ }
+Spawn   :: distinct []cstring
 View        :: distinct Tags
 Toggle_View :: distinct Tags
-Select_Monitor :: distinct struct{ target : Monitor_Index }
-Select         :: distinct struct{ delta : i8 }
-Swap       :: distinct struct{ delta : i8 }
+Select_Monitor :: struct{ target : Monitor_Index }
+Select         :: struct{ delta : i8 }
+Swap       :: struct{ delta : i8 }
 To_Tag     :: distinct Tags
 Toggle_Tag :: distinct Tags
-To_Monitor :: distinct struct{ target : Monitor_Index }
-Float      :: distinct struct{ }
-Center     :: distinct struct{ }
-Shoot      :: distinct struct{ unkindly : bool }
-Mouse_Move        :: distinct struct{ }
-Mouse_Resize      :: distinct struct{ }
-Mouse_View        :: distinct struct{ }
-Mouse_Toggle_View :: distinct struct{ }
-Mouse_To_Tag      :: distinct struct{ }
-Mouse_Toggle_Tag  :: distinct struct{ }
-Master_Resize :: distinct struct{ delta : f32 }
+To_Monitor :: struct{ target : Monitor_Index }
+Float      :: struct{ }
+Center     :: struct{ }
+Shoot      :: struct{ unkindly : bool }
+Mouse_Move        :: struct{ }
+Mouse_Resize      :: struct{ }
+Mouse_View        :: struct{ }
+Mouse_Toggle_View :: struct{ }
+Mouse_To_Tag      :: struct{ }
+Mouse_Toggle_Tag  :: struct{ }
+Master_Resize :: struct{ delta : f32 }
 
 // Checks whether there's something wrong in the bindings config
 verify_bindings :: proc() {
