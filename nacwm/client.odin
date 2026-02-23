@@ -4,6 +4,14 @@ import X "../vendor/x11/xlib"
 
 CLIENT_NONE :: Client_Index(-1)
 
+Quadrant :: enum {
+    None,
+    Top_Left,
+    Top_Right,
+    Bottom_Left,
+    Bottom_Right,
+}
+
 Client_Index :: int
 Client :: struct {
     monitor : Monitor_Index,
@@ -15,7 +23,9 @@ Client :: struct {
     size   : [2]i32,
     border : i32,
 
-    hints : struct {
+    // TODO: A way of visually representing anchors
+    anchor : Quadrant,
+    hints  : struct {
         min : [2]i32,
         max : [2]i32,
         valid : bool,
@@ -414,6 +424,17 @@ client_ensure_onscreen :: proc(client : ^Client) {
     }
     client.pos.x = max(client.pos.x, monitor.pos.x)
     client.pos.y = max(client.pos.y, monitor.pos.y)
+}
+
+client_apply_anchor :: #force_inline proc(client : ^Client, old_size : [2]i32) {
+    if client.anchor ==    .Top_Right \
+    || client.anchor == .Bottom_Right {
+        client.pos.x += old_size.x - client.size.x
+    }
+    if client.anchor == .Bottom_Left  \
+    || client.anchor == .Bottom_Right {
+        client.pos.y += old_size.y - client.size.y
+    }
 }
 
 client_is_visible :: #force_inline proc(client_idx : Client_Index) -> bool {

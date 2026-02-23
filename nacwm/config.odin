@@ -44,10 +44,10 @@ RECORD     :: "/home/nar/.local/bin/record-screen-x11"
 DMENU_FONT :: "monospace:size=10"
 
 RULES := [?]Rule{
-    // class        instance   title       Spawn_Rules{tags  floating  monitor}
-    { {"vesktop",   "",        ""},                   {{1},  false,    1}            },
-    { {"steam_app", "",        ""},                   {{},   true,     MONITOR_NONE} },
-    { {"",          "Toolkit", "Picture-in-Picture"}, {{},   true,     MONITOR_NONE} },
+    // class        instance   title       Spawn_Rules{tags  floating  monitor       anchor}
+    { {"vesktop",   "",        ""},                   {{1},  false,    1,            .None} },
+    { {"steam_app", "",        ""},                   {{},   true,     MONITOR_NONE, .None} },
+    { {"",          "Toolkit", "Picture-in-Picture"}, {{},   true,     MONITOR_NONE, .Top_Right} },
 }
 
 KEY_LEFT  : X.KeySym : .XK_m
@@ -143,6 +143,8 @@ BINDINGS := [?]Keybind{
 BUTTON_BINDINGS := [?]Buttonbind{
     { .Client, {.Mod4Mask},                           .Button1, Mouse_Move{}   },
     { .Client, {.Mod4Mask},                           .Button3, Mouse_Resize{} },
+    { .Client, {.Mod4Mask,             .ControlMask}, .Button1, Anchor{.None} },
+    { .Client, {.Mod4Mask,             .ControlMask}, .Button3, Mouse_Anchor{} },
 
     { .Tag,    {.Mod4Mask},                           .Button1, Mouse_View{}        },
     { .Tag,    {.Mod4Mask,             .ControlMask}, .Button1, Mouse_Toggle_View{} },

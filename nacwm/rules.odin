@@ -15,6 +15,7 @@ Spawn_Rules :: struct {
     tags     : Tags,
     floating : bool,
     monitor  : Monitor_Index,
+    anchor   : Quadrant,
 }
 Rule :: struct {
     filter : Client_Filter,
@@ -41,6 +42,7 @@ client_apply_rules :: proc(client : ^Client) {
         client.floating = rule.spawn.floating
         client.tags     = rule.spawn.tags
         client.monitor  = rule.spawn.monitor
+        client.anchor   = rule.spawn.anchor
         break
     }
 

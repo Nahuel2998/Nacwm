@@ -18,6 +18,7 @@ Action :: union {
     To_Monitor,
     Float,
     Center,
+    Anchor,
     Shoot,
     Mouse_Move,
     Mouse_Resize,
@@ -25,6 +26,7 @@ Action :: union {
     Mouse_Toggle_View,
     Mouse_To_Tag,
     Mouse_Toggle_Tag,
+    Mouse_Anchor,
     Master_Resize,
 }
 
@@ -41,6 +43,7 @@ Toggle_Tag :: distinct Tags
 To_Monitor :: struct{ target : Monitor_Index }
 Float      :: struct{ }
 Center     :: struct{ }
+Anchor     :: struct{ corner : Quadrant }
 Shoot      :: struct{ unkindly : bool }
 Mouse_Move        :: struct{ }
 Mouse_Resize      :: struct{ }
@@ -48,6 +51,7 @@ Mouse_View        :: struct{ }
 Mouse_Toggle_View :: struct{ }
 Mouse_To_Tag      :: struct{ }
 Mouse_Toggle_Tag  :: struct{ }
+Mouse_Anchor      :: struct{ }
 Master_Resize :: struct{ delta : f32 }
 
 // Checks whether there's something wrong in the bindings config
@@ -170,6 +174,14 @@ do_action :: proc(action : Action) {
         pos := monitor.pos + (monitor.size - client.size) / 2
         client_resize(client, pos, client.size)
 
+    case Anchor:
+        if g_selected.client == CLIENT_NONE do return
+
+        client := &g_clients[g_selected.client]
+        if !client.floating do return
+
+        client.anchor = a.corner
+
     case Shoot:
         client_kill(g_selected.client, !a.unkindly)
 
@@ -198,6 +210,13 @@ do_action :: proc(action : Action) {
         tag, ok := get_clicked_tag()
         if !ok do return
         do_action(Toggle_Tag{tag})
+
+    case Mouse_Anchor:
+        if g_selected.client == CLIENT_NONE do return
+
+        client := g_clients[g_selected.client]
+        corner := client_quadrant_mouse_at(client)
+        do_action(Anchor{corner})
 
     case Master_Resize:
         monitor    := &g_monitors[g_selected.monitor]

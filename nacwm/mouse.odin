@@ -96,3 +96,12 @@ get_clicked_tag :: proc() -> (int, bool) {
     }
     return -1, false
 }
+
+client_quadrant_mouse_at :: proc(client : Client) -> Quadrant {
+    pointer, ok := get_root_ptr()
+    if !ok do return .None
+
+    size   := client_size_real(client)
+    center := client.pos + size / 2
+    return Quadrant(1 + int(pointer.x > center.x) + 2 * int(pointer.y > center.y))
+}

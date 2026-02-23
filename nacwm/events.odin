@@ -132,11 +132,16 @@ recv_configure_request :: proc(event : X.XEvent) {
         before := ConfigureDebug{ client.pos, client.size, client.border }
     }
 
-    if .CWX           in mask do client.pos.x  = event.x // + monitor.pos.x // NOTE: dwm adds the monitor.pos here, but really I haven't seen
-    if .CWY           in mask do client.pos.y  = event.y // + monitor.pos.y //       a single window sending these as relative to monitor
+    old_size := client.size
+    if .CWBorderWidth in mask do client.border = event.border_width
     if .CWWidth       in mask do client.size.x = event.width
     if .CWHeight      in mask do client.size.y = event.height
-    if .CWBorderWidth in mask do client.border = event.border_width
+    if client.anchor == .None {
+        if .CWX       in mask do client.pos.x  = event.x // + monitor.pos.x // NOTE: dwm adds the monitor.pos here, but really I haven't seen
+        if .CWY       in mask do client.pos.y  = event.y // + monitor.pos.y //       a single window sending these as relative to monitor
+    } else {
+        client_apply_anchor(client, old_size)
+    }
     client_ensure_onscreen(client)
 
     when ODIN_DEBUG {
