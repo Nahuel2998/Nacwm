@@ -348,8 +348,18 @@ recv_button_press :: proc(event : X.XEvent) {
     }
 
     if client_idx != CLIENT_NONE {
+        log.debug("allow_events")
         X.AllowEvents(g_display, .ReplayPointer, X.CurrentTime)
         click = .Client
+    } else {
+        log.debug("other")
+        for monitor in g_monitors {
+            if event.window != monitor.bar.window do continue
+            if event.x <= TAG_COUNT * STYLE.bar.height {
+                click = .Tag
+            }
+            break
+        }
     }
 
     for binding in BUTTON_BINDINGS {

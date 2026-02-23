@@ -2,12 +2,13 @@ package nacwm
 
 import X "../vendor/x11/xlib"
 
-REFRESH_RATE  :: 165
+REFRESH_RATE :: 165
+TAG_COUNT    :: 9
 
 MASTER_FACTOR :: 0.6
 GAPS_WIDTH    :: 2 * 5
 
-BAR_STATUS_FALLBACK :: "Now | Today"
+BAR_STATUS_FALLBACK :: "Now | Today "
 
 // Windows will always be raised below this
 // NOTE: More correct would be to respect _NET_WM_STATE_ABOVE,
@@ -115,10 +116,11 @@ BINDINGS := [?]Keybind{
 BUTTON_BINDINGS := [?]Buttonbind{
     { .Client, {.Mod4Mask}, .Button1, Mouse_Move{}   },
     { .Client, {.Mod4Mask}, .Button3, Mouse_Resize{} },
+
+    { .Tag,    {.Mod4Mask}, .Button1, Mouse_View{} },
 }
 
 /*
-    { ClkTagBar,            0,              Button1,        view,           {0} },
     { ClkTagBar,            0,              Button3,        toggleview,     {0} },
     { ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
     { ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },

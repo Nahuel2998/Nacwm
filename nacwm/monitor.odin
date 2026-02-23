@@ -3,7 +3,7 @@ package nacwm
 import X "../vendor/x11/xlib"
 import "../vendor/x11/xinerama"
 
-Tags :: bit_set[1..=9]
+Tags :: bit_set[1..=TAG_COUNT]
 
 MONITOR_NONE :: Monitor_Index(-1)
 

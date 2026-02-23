@@ -23,6 +23,7 @@ Keybind :: struct {
 Click_Kind :: enum {
     Root,
     Client,
+    Tag,
 }
 
 BUTTON_MASK :: X.EventMask{ .ButtonPress, .ButtonRelease }
@@ -52,9 +53,10 @@ grab_buttons :: proc(window : X.Window, $focused : bool) {
     // TODO: Support numpad? why would I
     X.UngrabButton(g_display, X.AnyButton, {.AnyModifier}, window)
 
-    when !focused do X.GrabButton(g_display, X.AnyButton, {.AnyModifier}, window, false, BUTTON_MASK, .GrabModeAsync, .GrabModeAsync, X.None, X.None)
-
-    for bind in BUTTON_BINDINGS {
+    when !focused {
+        X.GrabButton(g_display, X.AnyButton, {.AnyModifier}, window, false, BUTTON_MASK, .GrabModeAsync, .GrabModeAsync, X.None, X.None)
+    } else do for bind in BUTTON_BINDINGS {
+        if bind.click != .Client do continue
         X.GrabButton(g_display, cast(u32)bind.button, bind.modifiers, window, false, BUTTON_MASK, .GrabModeAsync, .GrabModeAsync, X.None, X.None)
     }
 }
