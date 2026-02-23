@@ -114,10 +114,11 @@ BINDINGS := [?]Keybind{
 }
 
 BUTTON_BINDINGS := [?]Buttonbind{
-    { .Client, {.Mod4Mask}, .Button1, Mouse_Move{}   },
-    { .Client, {.Mod4Mask}, .Button3, Mouse_Resize{} },
+    { .Client, {.Mod4Mask},             .Button1, Mouse_Move{}   },
+    { .Client, {.Mod4Mask},             .Button3, Mouse_Resize{} },
 
-    { .Tag,    {.Mod4Mask}, .Button1, Mouse_View{} },
+    { .Tag,    {.Mod4Mask},             .Button1, Mouse_View{}   },
+    { .Tag,    {.Mod4Mask, .ShiftMask}, .Button1, Mouse_To_Tag{} },
 }
 
 /*

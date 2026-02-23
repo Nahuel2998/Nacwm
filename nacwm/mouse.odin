@@ -82,3 +82,17 @@ client_mouse_action :: proc($action : Mouse_Action) {
         client_switch_monitor(g_selected.client, monitor_idx, move=false, follow=true)
     }
 }
+
+// -- Utils
+get_clicked_tag :: proc() -> (int, bool) {
+    pointer, ok := get_root_ptr()
+    if !ok do return -1, false
+
+    monitor := g_monitors[g_selected.monitor]
+    for t in ~(Tags{}) {
+        if pointer.x <= monitor.pos.x + cast(i32)t * STYLE.bar.height {
+            return t, true
+        }
+    }
+    return -1, false
+}

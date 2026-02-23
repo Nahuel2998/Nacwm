@@ -20,6 +20,7 @@ Action :: union {
     Mouse_Move,
     Mouse_Resize,
     Mouse_View,
+    Mouse_To_Tag,
     Master_Resize,
 }
 
@@ -38,6 +39,7 @@ Shoot      :: distinct struct{ unkindly : bool }
 Mouse_Move   :: distinct struct{ }
 Mouse_Resize :: distinct struct{ }
 Mouse_View   :: distinct struct{ }
+Mouse_To_Tag :: distinct struct{ }
 Master_Resize :: distinct struct{ delta : f32 }
 
 // Checks whether there's something wrong in the bindings config
@@ -167,16 +169,14 @@ do_action :: proc(action : Action) {
         client_mouse_action(.Resize)
 
     case Mouse_View:
-        pointer, ok := get_root_ptr()
+        tag, ok := get_clicked_tag()
         if !ok do return
+        do_action(View{tag})
 
-        monitor := g_monitors[g_selected.monitor]
-        for t in ~(Tags{}) {
-            if pointer.x <= monitor.pos.x + cast(i32)t * STYLE.bar.height {
-                do_action(View{t})
-                return
-            }
-        }
+    case Mouse_To_Tag:
+        tag, ok := get_clicked_tag()
+        if !ok do return
+        do_action(To_Tag{tag})
 
     case Master_Resize:
         monitor    := &g_monitors[g_selected.monitor]
