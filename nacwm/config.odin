@@ -50,6 +50,11 @@ RULES := [?]Rule{
     { {"",          "Toolkit", "Picture-in-Picture"}, {{},   true,     MONITOR_NONE} },
 }
 
+KEY_LEFT  : X.KeySym : .XK_m
+KEY_DOWN  : X.KeySym : .XK_n
+KEY_UP    : X.KeySym : .XK_e
+KEY_RIGHT : X.KeySym : .XK_h
+
 BINDINGS := [?]Keybind{
     { {.Mod4Mask},               .XK_d,      Spawn{"dmenu_run", "-fn", DMENU_FONT, nil} },
     { {.Mod4Mask},               .XK_Return, Spawn{"kitty",                        nil} },
@@ -65,8 +70,8 @@ BINDINGS := [?]Keybind{
     { {},  X.KeySym(XF86.MonBrightnessUp),   Spawn{"brightnessctl", "-c", "backlight", "set", "5%+", nil} },
     { {},  X.KeySym(XF86.MonBrightnessDown), Spawn{"brightnessctl", "-c", "backlight", "set", "5%-", nil} },
 
-    { {},                        .XK_Print,  Spawn{SCREENSHOT,    nil} },
-    { {.ShiftMask},              .XK_Print,  Spawn{RECORD,        nil} },
+    { {},                        .XK_Print,  Spawn{SCREENSHOT, nil} },
+    { {.ShiftMask},              .XK_Print,  Spawn{RECORD,     nil} },
 
     { {.Mod4Mask},               .XK_1,      View{1} },
     { {.Mod4Mask},               .XK_2,      View{2} },
@@ -90,18 +95,18 @@ BINDINGS := [?]Keybind{
     { {.Mod4Mask, .ShiftMask},   .XK_9,      To_Tag{9} },
     { {.Mod4Mask, .ShiftMask},   .XK_0,      ~To_Tag{} },
 
-    { {.Mod4Mask},               .XK_n,      Select{-1} },
-    { {.Mod4Mask},               .XK_e,      Select{+1} },
-    { {.Mod4Mask, .ShiftMask},   .XK_n,      Move{-1} },
-    { {.Mod4Mask, .ShiftMask},   .XK_e,      Move{+1} },
+    { {.Mod4Mask},               KEY_DOWN,   Select{-1} },
+    { {.Mod4Mask},               KEY_UP,     Select{+1} },
+    { {.Mod4Mask, .ShiftMask},   KEY_DOWN,   Move{-1} },
+    { {.Mod4Mask, .ShiftMask},   KEY_UP,     Move{+1} },
 
-    { {.Mod4Mask},               .XK_m,      Select_Monitor{1} },
-    { {.Mod4Mask},               .XK_h,      Select_Monitor{0} },
-    { {.Mod4Mask, .ShiftMask},   .XK_m,      To_Monitor{1} },
-    { {.Mod4Mask, .ShiftMask},   .XK_h,      To_Monitor{0} },
+    { {.Mod4Mask},               KEY_LEFT,   Select_Monitor{1} },
+    { {.Mod4Mask},               KEY_RIGHT,  Select_Monitor{0} },
+    { {.Mod4Mask, .ShiftMask},   KEY_LEFT,   To_Monitor{1} },
+    { {.Mod4Mask, .ShiftMask},   KEY_RIGHT,  To_Monitor{0} },
 
-    { {.Mod4Mask, .ControlMask}, .XK_m,      Master_Resize{-0.05} },
-    { {.Mod4Mask, .ControlMask}, .XK_h,      Master_Resize{+0.05} },
+    { {.Mod4Mask, .ControlMask}, KEY_LEFT,   Master_Resize{-0.05} },
+    { {.Mod4Mask, .ControlMask}, KEY_RIGHT,  Master_Resize{+0.05} },
 
     { {.Mod4Mask},               .XK_t,      Float{}  },
     { {.Mod4Mask},               .XK_c,      Center{} },
