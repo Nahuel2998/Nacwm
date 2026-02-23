@@ -97,8 +97,8 @@ BINDINGS := [?]Keybind{
 
     { {.Mod4Mask},               KEY_DOWN,   Select{-1} },
     { {.Mod4Mask},               KEY_UP,     Select{+1} },
-    { {.Mod4Mask, .ShiftMask},   KEY_DOWN,   Move{-1} },
-    { {.Mod4Mask, .ShiftMask},   KEY_UP,     Move{+1} },
+    { {.Mod4Mask, .ShiftMask},   KEY_DOWN,   Swap{-1} },
+    { {.Mod4Mask, .ShiftMask},   KEY_UP,     Swap{+1} },
 
     { {.Mod4Mask},               KEY_LEFT,   Select_Monitor{1} },
     { {.Mod4Mask},               KEY_RIGHT,  Select_Monitor{0} },

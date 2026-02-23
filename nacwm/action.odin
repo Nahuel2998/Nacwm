@@ -11,7 +11,7 @@ Action :: union {
     View,
     Select_Monitor,
     Select,
-    Move,
+    Swap,
     To_Tag,
     To_Monitor,
     Float,
@@ -30,7 +30,7 @@ Spawn :: distinct []cstring
 View  :: distinct Tags
 Select_Monitor :: distinct struct{ target : Monitor_Index }
 Select         :: distinct struct{ delta : i8 }
-Move       :: distinct struct{ delta : i8 }
+Swap       :: distinct struct{ delta : i8 }
 To_Tag     :: distinct Tags
 To_Monitor :: distinct struct{ target : Monitor_Index }
 Float      :: distinct struct{ }
@@ -59,7 +59,7 @@ verify_bindings :: proc() {
 
         case Select:
             if a.delta == 0 do log.panic(a, "must be anything but 0")
-        case Move:
+        case Swap:
             if a.delta == 0 do log.panic(a, "must be anything but 0")
         }
     }
@@ -110,7 +110,7 @@ do_action :: proc(action : Action) {
         client_idx := nth_matching_client(g_selected.client, a.delta, monitor, client_is_visible_in_monitor)
         client_focus(client_idx)
 
-    case Move:
+    case Swap:
         if g_selected.client == CLIENT_NONE do return
 
         client := g_clients[g_selected.client]

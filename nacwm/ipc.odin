@@ -28,10 +28,10 @@ ipc_action :: proc(command : string) {
         if !ok_delta || delta == 0 do return
         do_action(Select{cast(i8)delta})
 
-    case "move": if !has_arg do return
+    case "swap": if !has_arg do return
         delta, ok_delta := strconv.parse_int(command[arg:], 10)
         if !ok_delta || delta == 0 do return
-        do_action(Move{cast(i8)delta})
+        do_action(Swap{cast(i8)delta})
 
     case "select-monitor": if !has_arg do return
         monitor_idx, ok_mon := strconv.parse_int(command[arg:], 10)
