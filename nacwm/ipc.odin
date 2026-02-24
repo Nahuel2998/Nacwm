@@ -61,6 +61,18 @@ ipc_action :: proc(command : string) {
     case "center":
         do_action(Center{})
 
+    case "anchor": if !has_arg do return
+        arg_end := word_end(command, arg)
+        corner : Quadrant
+        switch command[arg:arg_end] {
+        case "none":         corner = .None
+        case "top-left":     corner = .Top_Left
+        case "top-right":    corner = .Top_Right
+        case "bottom-left":  corner = .Bottom_Left
+        case "bottom-right": corner = .Bottom_Right
+        }
+        do_action(Anchor{corner})
+
     case "shoot":
         unkindly := has_arg && command[arg] == '1'
         do_action(Shoot{unkindly})
