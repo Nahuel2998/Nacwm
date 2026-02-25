@@ -31,8 +31,8 @@ client_mouse_action :: proc($action : Mouse_Action) {
     event : X.XEvent
     old_pos := client.pos
     when action == .Resize {
-        old_size := client_size_real(client^)
-        center   := client.pos + old_size / 2
+        old_size := client.size
+        center   := client.pos + client_size_real(client^) / 2
         left_side := pointer.x < center.x
         top_side  := pointer.y < center.y
     }
