@@ -4,3 +4,78 @@
 
 == What's
 Nearly A Compliant Window Manager
+
+This is just my daily-drive Window Manager
+
+In its core it's a port of https://dwm.suckless.org/[dwm] to Odin with a few changes in how things are done, more and less
+
+NOTE: This is pretty much a personal repo made public in case someone finds it some use. There will be sporadic commits and no releases. Also, my config is here rather than sensible defaults
+
+NOTE: This repo includes Odin's `vendor:x11/xlib` package with some modifications given some bindings were incorrect (and thus unusable) and I wanted this to compile with the `odin` package of my distro (I use Arch btw)
+
+== How to
+=== Compile / Run
+[source,sh]
+----
+odin build nacwm
+----
+Then just `exec` it in your `.xinitrc` or whatever your `Display Manager` wants you to do
+
+=== Config
+Just edit `nacwm/config.odin`
+
+NOTE: That's my personal config right there so unless we have the same programs, username, and keyboard layout (I use Colemak-DH btw) it'll be quite unusable
+
+== Changes from dwm
+=== Features
+* A bunch of features were omitted due to me not needing/caring about them
+* A bunch of features were added due to me needing/caring about them
+
+==== ++
+* Restart
+** Just a simple `execvp()`
+* Preserve on restart
+** On restart, saves client data on a property which is loaded after
+* Resize corners
+** Similar to https://dwm.suckless.org/patches/resizecorners[resizecorners] but without warping the cursor because why would you
+* Resize anchors
+** Ensure a floating window doesn't move from an anchored corner when it asks to be resized (doesn't affect user resize)
+** There's currently no visual indicator for them so just rember
+* IPC
+** May be controlled by setting the `_NACWM_COMMAND` property on the root window. Check `nacwm/ipc.odin` for details
+* `NOTIFICATION_CLASS`
+** Windows won't be raised over the window defined as `NOTIFICATION_CLASS`
+* Keybind to center floating window
+* Keybind to unkindly kill windows (they sometimes misbehave)
+
+==== \--
+* Sizehints on tiled resizals (Not planned; who uses this?)
+* Urgency hint (Very likely adding soon)
+* Ratio-preserving resizals (Kinda planned, I don't care too much about it)
+* Increment resizals (I don't care about this for now)
+* Bar showing window title (I don't really need it)
+* A bunch of click types (Won't be using for now)
+* NMaster (I only ever use one)
+* Selecting previous set of tags (I don't use this)
+
+==== ~~
+* Rather than zooming a client to master, you swap it with another given an offset
+* Moving between monitors is absolute rather than relative
+* Assumes windows send absolute coordinates rather than relative to monitor (most windows sent absolute from what I observed; `dwm` hid this by centering the window, which happened often)
+* When moving a client to another `Monitor`, it's not ``zoom``'d (more of an implementation detail than a conscious change)
+
+=== Internal
+* Prefers `[dynamic]T` instead of linked lists
+* ``Client``s are identified with an index into a global array of clients (`g_clients`)
+* ``Client``s have a `monitor` field rather than ``Monitor``s having a list of `clients`
+* Split into multiple files (without much logic, really, since I `grep` the entire thing anyways)
+* Stacking is much more minimalistic (windows are raised on click when floating, buried below the bar on tile)
+* There's only one focused `Client`, rather than a focused `Client` per `Monitor`; `focus`/`unfocus` logic was also changed quite a bit
+* The bar is drawn with https://www.cairographics.org/[cairo] and https://www.pango.org/[pango] which introduces huge dependencies but it's just simpler code
+
+== Bugs
+* Very rarely, seen some windows lose focus when it didn't feel right for them to do so
+
+== Thank
+* https://git.suckless.org/dwm/[dwm]: For being the base of this project
+* https://github.com/bakkeby/dwm-commented[dwm-commented]: For helping me decipher what was going on
