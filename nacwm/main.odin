@@ -24,7 +24,7 @@ g_running  := true
 g_context : runtime.Context
 
 main :: proc() {
-    context.logger = log.create_console_logger()
+    context.logger = log.create_console_logger(.Debug when ODIN_DEBUG else .Info)
     g_context = context
 
     verify_bindings()
