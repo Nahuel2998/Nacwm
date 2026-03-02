@@ -88,7 +88,7 @@ client_from_window :: #force_inline proc(window : X.Window) -> Client_Index {
 }
 
 window_state_get :: proc(window : X.Window) -> (X.WMHintState, bool) {
-    res, ok := get_property(window, g_atoms.wm[.State], g_atoms.wm[.State], i32, 2, false)
+    res, ok := get_property(window, g_atoms.wm[.State], g_atoms.wm[.State], int, 2, false)
     if ok do return cast(X.WMHintState)res, true
     return {}, false
 }

@@ -171,6 +171,7 @@ get_property :: proc(window : X.Window, prop : X.Atom, x_type : X.Atom, $type : 
     if !ok do return {}, false
     defer X.Free(data)
 
+    // FIXME: Format should be checked for safety
     if num_items == 0 do return {}, true
 
     res := cast(^type)data
