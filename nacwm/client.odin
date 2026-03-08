@@ -66,21 +66,24 @@ client_detach :: proc(client_idx : Client_Index) {
 
     delete(g_clients[client_idx].name)
     delete_key(&g_clients_extra, g_clients[client_idx].window)
-    unordered_remove(&g_clients, client_idx)
-    // unordered_remove swaps last element for the one we just deleted
+
+    // NOTE: Not optimal, but since the arrange order depends on this, it has to be ordered
+    //       If the arrange order ever changes to not depend  on this, it may be  unordered
+    ordered_remove(&g_clients, client_idx)
+
+    if g_selected.client == client_idx {
+        g_selected.client = CLIENT_NONE
+    }
+
     // If we removed the last one we're fine
     if client_idx == len(g_clients) do return
 
-    // Otherwise, fixup the indices
-    client := g_clients[client_idx]
-    #reverse for &idx in g_monitors[client.monitor].stack {
-        if idx != len(g_clients) do continue
-        idx = client_idx
-        break
+    // Otherwise, fixup the indexes
+    for &monitor in g_monitors do for &idx in monitor.stack {
+        if idx >= client_idx do idx -= 1
     }
-
-    if g_selected.client == len(g_clients) {
-        g_selected.client = client_idx
+    if g_selected.client > client_idx {
+        g_selected.client -= 1
     }
 }
 
@@ -382,6 +385,8 @@ client_unmanage :: proc(client_idx : Client_Index, $destroyed : bool) {
     client_extra := g_clients_extra[client.window]
     _ = client_extra // Used when !destroyed
 
+    was_selected := client_idx == g_selected.client
+
     client_stack_detach(client.monitor, client_idx)
     client_detach(client_idx)
 
@@ -401,7 +406,7 @@ client_unmanage :: proc(client_idx : Client_Index, $destroyed : bool) {
         X.UngrabServer(g_display)
     }
 
-    if client_idx == g_selected.client {
+    if was_selected {
         monitor_refocus()
     }
     update_client_list()
