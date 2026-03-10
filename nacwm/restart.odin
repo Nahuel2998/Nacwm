@@ -12,6 +12,7 @@ Restart_Window_Data  :: struct {
         monitor  : Monitor_Index  | 8,
         tags     : u16 /* Tags */ | 16,
         floating : bool           | 1,
+        anchor   : Quadrant       | 3,
     },
 }
 #assert(size_of(Restart_Window_Data) == size_of([2]uint))
@@ -39,6 +40,7 @@ clients_save :: proc() {
                 monitor  = client.monitor,
                 tags     = transmute(u16)client.tags,
                 floating = client.floating,
+                anchor   = client.anchor,
             },
         }
     }

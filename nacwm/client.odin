@@ -331,6 +331,7 @@ window_manage :: proc(window : X.Window, attrs : X.XWindowAttributes, transient_
         client.tags     = transmute(Tags)restore.data.tags
         client.monitor  = restore.data.monitor
         client.floating = restore.data.floating
+        client.anchor   = restore.data.anchor
     }
     else if transient_for != X.None {
         client_idx := client_from_window(transient_for)
