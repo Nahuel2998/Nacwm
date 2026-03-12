@@ -74,7 +74,7 @@ NOTE: That's my personal config right there so unless we have the same programs,
 * The bar is drawn with https://www.cairographics.org/[cairo] and https://www.pango.org/[pango] which introduces huge dependencies but it's just simpler code
 
 == Bugs
-* Very rarely, seen some windows lose focus when it didn't feel right for them to do so
+* None I think
 
 == Thank
 * https://git.suckless.org/dwm/[dwm]: For being the base of this project
