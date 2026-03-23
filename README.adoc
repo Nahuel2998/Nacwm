@@ -11,7 +11,7 @@ In its core it's a port of https://dwm.suckless.org/[dwm] to Odin with a few cha
 
 NOTE: This is pretty much a personal repo made public in case someone finds it some use. There will be sporadic commits and no releases. Also, my config is here rather than sensible defaults
 
-NOTE: This repo includes Odin's `vendor:x11/xlib` package with some modifications given some bindings were incorrect (and thus unusable) and I wanted this to compile with the `odin` package of my distro (I use Arch btw)
+NOTE: This repo includes Odin's `vendor:x11/xlib` package with some modifications given some bindings were incorrect (and thus unusable) and I wanted this to compile with whatever `odin` version different distros may come with
 
 == How to
 === Compile / Run
@@ -22,7 +22,7 @@ odin build nacwm
 Then just `exec` it in your `.xinitrc` or whatever your `Display Manager` wants you to do
 
 === Config
-Just edit `nacwm/config.odin`
+Copy `nacwm/config.def.odin` into `nacwm/config.odin`, remove the `#+ignore` line at the top, and edit till you get something usable
 
 NOTE: That's my personal config right there so unless we have the same programs, username, and keyboard layout (I use Colemak-DH btw) it'll be quite unusable
 
