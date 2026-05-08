@@ -470,8 +470,9 @@ client_tags_set :: proc(client_idx : Client_Index, tags : Tags, $toggle : bool) 
     client := &g_clients[client_idx]
 
     new_tags : Tags
-    when toggle do new_tags = tags | client.tags
+    when toggle do new_tags = tags ~ client.tags
     else        do new_tags = tags
+    if new_tags == {} do return
 
     if !monitor_has_tags(client.monitor, new_tags) {
         // Toggling becoming a move to another monitor would be quite counter-intuitive

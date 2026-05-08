@@ -213,8 +213,9 @@ monitor_tags_set :: proc(monitor_idx : Monitor_Index, tags : Tags, $toggle : boo
     monitor := &g_monitors[monitor_idx]
 
     new_tags : Tags
-    when toggle do new_tags = tags | monitor.tags
+    when toggle do new_tags = tags ~ monitor.tags
     else        do new_tags = tags
+    if new_tags == {} do return
 
     if !monitor_has_tags(monitor_idx, new_tags) {
         new_monitor := monitor_with_tags(new_tags)
