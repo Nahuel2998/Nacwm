@@ -208,10 +208,40 @@ monitor_first_visible_client :: #force_inline proc(monitor : Monitor) -> Client_
     return CLIENT_NONE
 }
 
-monitor_tags_set :: proc(monitor : ^Monitor, tags : Tags, $toggle : bool) {
-    when toggle do monitor.tags |= tags
-    else        do monitor.tags  = tags
+monitor_tags_set :: proc(monitor_idx : Monitor_Index, tags : Tags, $toggle : bool) {
+    if monitor_idx == MONITOR_NONE do return
+    monitor := &g_monitors[monitor_idx]
+
+    new_tags : Tags
+    when toggle do new_tags = tags | monitor.tags
+    else        do new_tags = tags
+
+    if !monitor_has_tags(monitor_idx, new_tags) {
+        new_monitor := monitor_with_tags(new_tags)
+        if new_monitor == MONITOR_NONE do return
+
+        if monitor_idx == g_selected.monitor {
+            when !toggle { // Toggling becoming a move to another monitor would be quite counter-intuitive
+                g_selected.monitor = new_monitor
+            }
+        }
+        monitor = &g_monitors[new_monitor]
+    }
+    monitor.tags = new_tags
+
     monitor_refocus()
     monitor_arrange(g_selected.monitor)
     bar_draw(monitor^)
+}
+
+monitor_with_tags :: #force_inline proc(tags : Tags) -> Monitor_Index {
+    for idx in 0..<len(g_monitors) {
+        if monitor_has_tags(idx, tags) do return idx
+    }
+    return MONITOR_NONE
+}
+
+monitor_has_tags :: #force_inline proc(monitor_idx : Monitor_Index, tags : Tags) -> bool {
+    return monitor_idx >= len(MONITOR_TAGS) \
+        || tags - MONITOR_TAGS[monitor_idx] == {}
 }

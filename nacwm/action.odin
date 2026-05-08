@@ -106,12 +106,10 @@ do_action :: proc(action : Action) {
         log.panic("Failed to run command:", a)
 
     case View:
-        monitor := &g_monitors[g_selected.monitor]
-        monitor_tags_set(monitor, cast(Tags)a, false)
+        monitor_tags_set(g_selected.monitor, cast(Tags)a, false)
 
     case Toggle_View:
-        monitor := &g_monitors[g_selected.monitor]
-        monitor_tags_set(monitor, cast(Tags)a, true)
+        monitor_tags_set(g_selected.monitor, cast(Tags)a, true)
 
     case Select:
         if g_selected.client == CLIENT_NONE do return
@@ -147,14 +145,10 @@ do_action :: proc(action : Action) {
         monitor_focus(a.target)
 
     case To_Tag:
-        if g_selected.client == CLIENT_NONE do return
-        client := &g_clients[g_selected.client]
-        client_tags_set(client, cast(Tags)a, false)
+        client_tags_set(g_selected.client, cast(Tags)a, false)
 
     case Toggle_Tag:
-        if g_selected.client == CLIENT_NONE do return
-        client := &g_clients[g_selected.client]
-        client_tags_set(client, cast(Tags)a, true)
+        client_tags_set(g_selected.client, cast(Tags)a, true)
 
     case To_Monitor:
         if a.target >= len(g_monitors) do return

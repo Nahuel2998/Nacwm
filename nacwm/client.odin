@@ -465,9 +465,25 @@ client_is_fixed :: #force_inline proc(client : Client) -> bool {
         && client.hints.min == client.hints.max
 }
 
-client_tags_set :: proc(client : ^Client, tags : Tags, $toggle : bool) {
-    when toggle do client.tags |= tags
-    else        do client.tags  = tags
+client_tags_set :: proc(client_idx : Client_Index, tags : Tags, $toggle : bool) {
+    if client_idx == CLIENT_NONE do return
+    client := &g_clients[client_idx]
+
+    new_tags : Tags
+    when toggle do new_tags = tags | client.tags
+    else        do new_tags = tags
+
+    if !monitor_has_tags(client.monitor, new_tags) {
+        // Toggling becoming a move to another monitor would be quite counter-intuitive
+        when toggle do return
+
+        new_monitor := monitor_with_tags(new_tags)
+        if new_monitor == MONITOR_NONE do return
+
+        client_switch_monitor(client_idx, new_monitor, move=true, follow=false)
+    }
+    client.tags = new_tags
+
     monitor_refocus()
     monitor_arrange(client.monitor)
     bar_draw(g_monitors[client.monitor])

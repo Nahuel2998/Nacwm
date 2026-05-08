@@ -45,6 +45,14 @@ RECORD     :: "/home/nar/.local/bin/record-screen-x11"
 DMENU_FONT   :: "BlexMonoNerdFont:size=10"
 DMENU_HEIGHT :: "22"
 
+// Tags allowed per-monitor : MONITOR_TAGS[Monitor_Index(...)] = Tags{...}
+// Example: If a client in Monitor_Index(0) is attempted to be assigned Tags{4} and Monitor_Index(0) has Tags{5..9},
+//          then this list is seached for the first Monitor_Index that has Tags{4}
+//          The client is then assigned that Monitor_Index and Tags
+// A monitor not in this list counts as having all tags (~Tags{})
+@(rodata)
+MONITOR_TAGS := [?]Tags{}
+
 RULES := [?]Rule{
     // class        instance   title       Spawn_Rules{tags  floating  monitor       anchor}
     { {"vesktop",   "",        ""},                   {{1},  false,    1,            .None} },
