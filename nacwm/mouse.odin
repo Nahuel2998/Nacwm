@@ -80,6 +80,7 @@ client_mouse_action :: proc($action : Mouse_Action) {
     monitor_idx := monitor_idx_from_rect(client.pos, client.size)
     if monitor_idx != client.monitor {
         client_switch_monitor(g_selected.client, monitor_idx, move=false, follow=true)
+        monitor_arrange(monitor_idx)
     }
 }
 

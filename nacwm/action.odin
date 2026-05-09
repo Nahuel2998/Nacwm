@@ -154,6 +154,7 @@ do_action :: proc(action : Action) {
         if a.target >= len(g_monitors) do return
 
         client_switch_monitor(g_selected.client, a.target, move=true, follow=false)
+        monitor_arrange(a.target)
 
     case Float:
         client_float(g_selected.client)

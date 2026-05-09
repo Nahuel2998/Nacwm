@@ -259,6 +259,7 @@ client_kill :: proc(client_idx : Client_Index, kindly := true) {
 }
 
 // FIXME: Client doesn't always go to the master area
+// NOTE:  Doesn't arrange the new monitor, caller should
 client_switch_monitor :: proc(client_idx : Client_Index, new_monitor_idx : Monitor_Index, $move : bool, $follow : bool) {
     if client_idx == CLIENT_NONE do return
 
@@ -277,13 +278,14 @@ client_switch_monitor :: proc(client_idx : Client_Index, new_monitor_idx : Monit
             client.pos += offset
         }
     }
-    client.monitor = new_monitor_idx
+    old_monitor_idx := client.monitor
+    client.monitor   = new_monitor_idx
 
     if client_idx == g_selected.client {
         when follow do g_selected.monitor = client.monitor
         else        do monitor_refocus()
     }
-    monitor_arrange_all()
+    monitor_arrange(old_monitor_idx)
 }
 
 // Resizes a client, minds size hints
