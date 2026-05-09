@@ -47,6 +47,7 @@ NOTE: That's my personal config right there so unless we have the same programs,
 ** Windows won't be raised over the window defined as `NOTIFICATION_CLASS`
 * Keybind to center floating window
 * Keybind to unkindly kill windows (they sometimes misbehave)
+* Restricting/Associating certain tags to a monitor
 
 ==== \--
 * Sizehints on tiled resizals (Not planned; who uses this?)
