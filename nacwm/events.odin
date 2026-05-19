@@ -366,9 +366,9 @@ recv_button_press :: proc(event : X.XEvent) {
     }
 
     for binding in BUTTON_BINDINGS {
-        if click        != binding.click  \
-        || event.button != binding.button \
-        || event.state  != binding.modifiers { continue }
+        if (click        != binding.click && binding.click != .Any) \
+        ||  event.button != binding.button \
+        ||  event.state  != binding.modifiers { continue }
         do_action(binding.action)
         break
     }

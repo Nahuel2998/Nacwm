@@ -21,6 +21,7 @@ Keybind :: struct {
 }
 
 Click_Kind :: enum {
+    Any,
     Root,
     Client,
     Tag,
@@ -56,7 +57,7 @@ grab_buttons :: proc(window : X.Window, $focused : bool) {
     when !focused {
         X.GrabButton(g_display, X.AnyButton, {.AnyModifier}, window, false, BUTTON_MASK, .GrabModeAsync, .GrabModeAsync, X.None, X.None)
     } else do for bind in BUTTON_BINDINGS {
-        if bind.click != .Client do continue
+        if bind.click != .Client && bind.click != .Any do continue
         X.GrabButton(g_display, cast(u32)bind.button, bind.modifiers, window, false, BUTTON_MASK, .GrabModeAsync, .GrabModeAsync, X.None, X.None)
     }
 }

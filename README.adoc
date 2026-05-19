@@ -38,6 +38,7 @@ NOTE: That's my personal config right there so unless we have the same programs,
 ** On restart, saves client data on a property which is loaded after
 * Resize corners
 ** Similar to https://dwm.suckless.org/patches/resizecorners[resizecorners] but without warping the cursor because why would you
+* Any click type ( https://dwm.suckless.org/patches/clkanywhere[clkanywhere] patch )
 * Resize anchors
 ** Ensure a floating window doesn't move from an anchored corner when it asks to be resized (doesn't affect user resize)
 ** There's currently no visual indicator for them so just rember
