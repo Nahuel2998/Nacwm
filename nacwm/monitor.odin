@@ -98,6 +98,15 @@ monitor_new :: proc() {
         tags  = {1},
         master_factor = MASTER_FACTOR,
     }
+
+    // If monitor has tag restrictions, select the first available
+    if monitor.index < len(MONITOR_TAGS) {
+        for tag in MONITOR_TAGS[monitor.index] {
+            monitor.tags = {tag}
+            break
+        }
+    }
+
     append(&g_monitors, monitor)
 }
 
