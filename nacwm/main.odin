@@ -42,6 +42,8 @@ main :: proc() {
     scan_windows()
     run()
 
+    // FIXME: If we restart(), setdown() isn't called; is this right?
+    //        Currently it causes floating windows to spawn leftmost
     if g_restart do restart()
 }
 
@@ -92,7 +94,11 @@ setup :: proc() {
 }
 
 setdown :: proc() {
-    do_action(~View{})
+    for _, idx in g_monitors {
+        // Since hiding windows moves them offscreen, we make all tags visible
+        // Just so the next windowmanager (likely us, too) doesn't freak out
+        monitor_tags_set(idx, ~{}, false)
+    }
     for client_idx in 0..<len(g_clients) {
         client_unmanage(client_idx, false)
     }
